@@ -88,3 +88,32 @@ body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > span {
 .ta-item-photo-camera i,.ta-item-photo-camera span{color:#fff !important;}
 .ta-item-photo-camera:focus-visible{outline:3px solid #38bdf8;outline-offset:3px;}
 .ta-item-photo-camera:active{transform:translateY(2px);box-shadow:0 1px 0 #063d5b !important;}
+
+
+/* Solo 3.5.51: edge-to-edge, equal-width RTL bottom navigation.
+ * Five buttons exist in Solo (dashboard, invoices, items, accounts, reports).
+ * Keep the previously enlarged icons; remove the unused sixth grid column. */
+body.ta-3d-v3524 nav.ta-bottom-nav > div {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  padding-inline: max(2px, env(safe-area-inset-right, 0px)) max(2px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+  direction: rtl;
+  column-gap: 0;
+}
+body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn {
+  box-sizing: border-box;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: 0 !important;
+  padding-inline: 1px;
+  text-align: center;
+}
+body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > i {
+  margin-inline: auto;
+}
