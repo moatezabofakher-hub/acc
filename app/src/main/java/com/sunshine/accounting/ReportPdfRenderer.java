@@ -148,27 +148,20 @@ final class ReportPdfRenderer {
                     Color.DKGRAY, Layout.Alignment.ALIGN_NORMAL, 4);
             w.add("المتبقي: " + formatAmount(input.optDouble("remainingAmount", 0), currency), 11, true,
                     Color.BLACK, Layout.Alignment.ALIGN_NORMAL, 10);
+            // Show only balances in the invoice currency, never the unrelated currency.
             JSONObject beforeBalances = input.optJSONObject("previousBalances");
             JSONObject afterBalances = input.optJSONObject("finalBalances");
-            if (beforeBalances != null && afterBalances != null) {
+            boolean hasCurrentBalance = input.has("previousBalance") && !input.isNull("previousBalance");
+            boolean hasLegacyBalance = beforeBalances != null && afterBalances != null
+                    && beforeBalances.has(currency) && !beforeBalances.isNull(currency)
+                    && afterBalances.has(currency) && !afterBalances.isNull(currency);
+            if (hasCurrentBalance || hasLegacyBalance) {
+                double previousBalance = hasCurrentBalance ? input.optDouble("previousBalance") : beforeBalances.optDouble(currency);
+                double currentBalance = hasCurrentBalance ? input.optDouble("finalBalance") : afterBalances.optDouble(currency);
                 w.rule(Color.rgb(196, 214, 223), 8);
-                for (String balanceCurrency : new String[]{"USD", "SYP"}) {
-                    if (!beforeBalances.isNull(balanceCurrency) && beforeBalances.has(balanceCurrency)) {
-                        w.add("الرصيد قبل الفاتورة ("+ balanceCurrency +"): " + formatAmount(beforeBalances.optDouble(balanceCurrency), balanceCurrency), 11,
-                                false, Color.DKGRAY, Layout.Alignment.ALIGN_NORMAL, 5);
-                    }
-                }
-                for (String balanceCurrency : new String[]{"USD", "SYP"}) {
-                    if (!afterBalances.isNull(balanceCurrency) && afterBalances.has(balanceCurrency)) {
-                        w.add("الرصيد النهائي ("+ balanceCurrency +"): " + formatAmount(afterBalances.optDouble(balanceCurrency), balanceCurrency), 12,
-                                true, Color.rgb(15, 70, 82), Layout.Alignment.ALIGN_NORMAL, 7);
-                    }
-                }
-            } else if (!input.isNull("previousBalance") && input.has("previousBalance")) {
-                w.rule(Color.rgb(196, 214, 223), 8);
-                w.add("الرصيد قبل الفاتورة: " + formatAmount(input.optDouble("previousBalance"), currency), 11,
+                w.add("الرصيد قبل الفاتورة: " + formatAmount(previousBalance, currency), 11,
                         false, Color.DKGRAY, Layout.Alignment.ALIGN_NORMAL, 5);
-                w.add("الرصيد النهائي: " + formatAmount(input.optDouble("finalBalance"), currency), 12,
+                w.add("الرصيد الحالي: " + formatAmount(currentBalance, currency), 12,
                         true, Color.rgb(15, 70, 82), Layout.Alignment.ALIGN_NORMAL, 7);
             }
             String note = clean(input.optString("note"), 500);

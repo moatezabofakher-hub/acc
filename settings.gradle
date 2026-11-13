@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = 'SAN_SHINE_Accounting'
+rootProject.name = 'Tiqany_Acc_Solo'
 include ':app'
