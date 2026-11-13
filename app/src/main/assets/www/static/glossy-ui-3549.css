@@ -21,3 +21,70 @@ body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > span{font-size:9px;line-height:1.1
 .ta-decision-actions button:active,#dialogContainer[data-dialog-type="exit"] .ta-exit-actions button:active{transform:translateY(3px);box-shadow:0 1px 0 #99b1bf!important;}
 @media(max-width:355px){body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn{margin:2px 1px;}body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > i{width:29px;height:29px;font-size:16px!important;}}
 @media(prefers-reduced-motion:reduce){.ta-decision-actions button,#dialogContainer .ta-exit-actions button{transition:none;}}
+
+
+/* Solo UI update: larger, balanced bottom navigation buttons.
+ * Six columns are retained; only visual sizing/spacing changes.
+ * The existing 122px main-content bottom padding already clears this bar. */
+body.ta-3d-v3524 nav.ta-bottom-nav > div {
+  height:72px !important;
+  min-height:72px;
+  align-items:stretch;
+}
+body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn {
+  margin:2px 1px;
+  min-height:66px;
+  padding:3px 1px 4px;
+  gap:2px;
+  border-radius:14px;
+}
+body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > i {
+  width:43px;
+  height:43px;
+  min-width:43px;
+  font-size:24px !important;
+  border-radius:13px;
+  flex-shrink:0;
+}
+body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > span {
+  font-size:10.5px;
+  font-weight:800;
+  line-height:1.15;
+  white-space:nowrap;
+  max-width:100%;
+}
+@media (max-width:355px) {
+  body.ta-3d-v3524 nav.ta-bottom-nav > div {
+    height:68px !important;
+    min-height:68px;
+  }
+  body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn {
+    min-height:62px;
+    margin:2px 0;
+    padding:2px 0 3px;
+    gap:1px;
+  }
+  body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > i {
+    width:39px;
+    height:39px;
+    min-width:39px;
+    font-size:22px !important;
+    border-radius:12px;
+  }
+  body.ta-3d-v3524 nav.ta-bottom-nav .nav-btn > span {
+    font-size:9.5px;
+  }
+}
+
+/* Solo 3.5.51: high-contrast camera choice on the item photo card. */
+.ta-item-photo-camera{
+  background:#075985 !important;
+  background-image:linear-gradient(145deg,#0c7daf,#075985) !important;
+  color:#fff !important;
+  border:1px solid #07517c !important;
+  box-shadow:0 3px 0 #063d5b,0 5px 11px #092c4b35 !important;
+  min-height:39px;
+}
+.ta-item-photo-camera i,.ta-item-photo-camera span{color:#fff !important;}
+.ta-item-photo-camera:focus-visible{outline:3px solid #38bdf8;outline-offset:3px;}
+.ta-item-photo-camera:active{transform:translateY(2px);box-shadow:0 1px 0 #063d5b !important;}
