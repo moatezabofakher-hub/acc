@@ -1,12 +1,6 @@
 package com.sunshine.accounting;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.os.Build;
-import android.content.Context;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.webkit.PermissionRequest;
@@ -28,10 +22,6 @@ import android.graphics.Color;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.content.Intent;
-import android.content.ClipData;
-import android.provider.MediaStore;
-import androidx.core.content.FileProvider;
-import java.io.File;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
@@ -70,20 +60,11 @@ public final class MainActivity extends FragmentActivity {
     private static final String APP_URL = "https://" + HOST + "/assets/www/index.html";
     private static final int PICK_IMPORT = 2401;
     private static final int SAVE_BACKUP = 2402;
-    private static final int REQUEST_ITEM_CAMERA = 2404;
-    private static final int REQUEST_ALERT_PERMISSION = 2405;
-    private static final String ALERT_CHANNEL = "solo_stock_alerts";
-    private volatile String pendingAlertId;
-    private final ArrayList<String[]> pendingAlerts = new ArrayList<>();
-    private boolean alertPermissionInFlight;
     private WebView webView;
-    private volatile boolean trustedLocalMainFrame;
     private NativeBluetoothPrinter bluetoothPrinter;
     private BiometricPrompt biometricPrompt;
     private ValueCallback<Uri[]> pendingFileChooser;
-    private Uri pendingItemPhotoCameraUri;
     private String pendingBackupJson;
-    private volatile boolean reportPdfBusy;
 
     // Local Storage Access Framework folder (persisted permission) and Drive authorization.
     private final ActivityResultLauncher<Intent> folderLauncher = registerForActivityResult(
@@ -160,9 +141,6 @@ public final class MainActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        pendingAlertId = getIntent() == null ? null : getIntent().getStringExtra("ledger_alert_id");
-        // Stop legacy Google Drive periodic backups when upgrading; local schedules remain intact.
-        AutoBackupManager.disableOldDriveBackups(this);
         // Android 15+ enforces edge-to-edge. Reserve system-bar and cutout space
         // using WebView LAYOUT MARGINS (not WebView internal padding) so its CSS
         // viewport and fixed header/footer never extend behind Android bars.
@@ -214,18 +192,6 @@ public final class MainActivity extends FragmentActivity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
-            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                trustedLocalMainFrame = url != null && url.startsWith("https://" + HOST + "/assets/www/");
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                trustedLocalMainFrame = url != null && url.startsWith("https://" + HOST + "/assets/www/");
-            }
-
-            @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("https".equals(uri.getScheme()) && HOST.equals(uri.getHost())) {
@@ -270,21 +236,12 @@ public final class MainActivity extends FragmentActivity {
                                              FileChooserParams params) {
                 if (pendingFileChooser != null) pendingFileChooser.onReceiveValue(null);
                 pendingFileChooser = callback;
-                if (params.isCaptureEnabled() && acceptsImage(params)) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                            == PackageManager.PERMISSION_GRANTED) {
-                        startItemPhotoCamera();
-                    } else {
-                        requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_ITEM_CAMERA);
-                    }
-                } else {
-                    try {
-                        startActivityForResult(params.createIntent(), PICK_IMPORT);
-                    } catch (Exception e) {
-                        pendingFileChooser = null;
-                        callback.onReceiveValue(null);
-                        Toast.makeText(MainActivity.this, "لا يمكن فتح منتقي الملفات", Toast.LENGTH_LONG).show();
-                    }
+                try {
+                    startActivityForResult(params.createIntent(), PICK_IMPORT);
+                } catch (Exception e) {
+                    pendingFileChooser = null;
+                    callback.onReceiveValue(null);
+                    Toast.makeText(MainActivity.this, "لا يمكن فتح منتقي الملفات", Toast.LENGTH_LONG).show();
                 }
                 return true;
             }
@@ -293,10 +250,7 @@ public final class MainActivity extends FragmentActivity {
         webView.addJavascriptInterface(new NativeBarcodeBridge(), "NativeBarcode");
         webView.addJavascriptInterface(new SecurityBridge(), "NativeSecurity");
         webView.addJavascriptInterface(new ExitBridge(), "Android");
-        webView.addJavascriptInterface(new LedgerNotificationsBridge(), "AndroidAlerts");
         webView.addJavascriptInterface(new BackupBridge(), "AndroidFiles");
-        webView.addJavascriptInterface(new ReportPdfBridge(), "AndroidReports");
-        webView.addJavascriptInterface(new InvoicePdfBridge(), "AndroidInvoicePdf");
         webView.addJavascriptInterface(new AutoBackupBridge(), "AndroidAutoBackup");
         bluetoothPrinter = new NativeBluetoothPrinter(this, webView);
         webView.addJavascriptInterface(bluetoothPrinter, "AndroidPrinter");
@@ -358,37 +312,6 @@ public final class MainActivity extends FragmentActivity {
             }
             pendingWebCameraPermission = request;
             requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_WEB_CAMERA);
-        }
-    }
-
-    private boolean acceptsImage(WebChromeClient.FileChooserParams params) {
-        String[] types = params.getAcceptTypes();
-        if (types == null) return false;
-        for (String type : types) {
-            if (type != null && (type.startsWith("image/") || "image/*".equals(type))) return true;
-        }
-        return false;
-    }
-
-    private void startItemPhotoCamera() {
-        if (pendingFileChooser == null) return;
-        try {
-            File folder = new File(getCacheDir(), "item_images");
-            if (!folder.isDirectory() && !folder.mkdirs()) throw new IOException("Unable to create image folder");
-            File photo = File.createTempFile("item_photo_", ".jpg", folder);
-            pendingItemPhotoCameraUri = FileProvider.getUriForFile(
-                    this, getPackageName() + ".fileprovider", photo);
-            Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            camera.putExtra(MediaStore.EXTRA_OUTPUT, pendingItemPhotoCameraUri);
-            camera.setClipData(ClipData.newRawUri("Item photo", pendingItemPhotoCameraUri));
-            camera.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            startActivityForResult(camera, PICK_IMPORT);
-        } catch (Exception ex) {
-            pendingItemPhotoCameraUri = null;
-            ValueCallback<Uri[]> callback = pendingFileChooser;
-            pendingFileChooser = null;
-            if (callback != null) callback.onReceiveValue(null);
-            Toast.makeText(this, "تعذر فتح كاميرا صور المواد", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -459,28 +382,6 @@ public final class MainActivity extends FragmentActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_ALERT_PERMISSION) {
-            alertPermissionInFlight = false;
-            ArrayList<String[]> queued = new ArrayList<>(pendingAlerts);
-            pendingAlerts.clear();
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                for (String[] one : queued) postLedgerNotification(one[0],one[1],one[2]);
-            } // In-app notifications remain available when OS permission is denied.
-            return;
-        }
-        if (requestCode == REQUEST_ITEM_CAMERA) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    && isLocalPage()) {
-                startItemPhotoCamera();
-            } else {
-                ValueCallback<Uri[]> callback = pendingFileChooser;
-                pendingFileChooser = null;
-                pendingItemPhotoCameraUri = null;
-                if (callback != null) callback.onReceiveValue(null);
-                Toast.makeText(this, "اسمح بالكاميرا لتصوير المادة", Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
         if (requestCode == REQUEST_WEB_CAMERA) {
             PermissionRequest request = pendingWebCameraPermission;
             pendingWebCameraPermission = null;
@@ -578,15 +479,6 @@ public final class MainActivity extends FragmentActivity {
 
     private final class ExitBridge {
         @JavascriptInterface
-        public String getAppVersionName() {
-            try {
-                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-            } catch (Exception ignored) {
-                return "";
-            }
-        }
-
-        @JavascriptInterface
         public void exitApp() {
             runOnUiThread(() -> { if (isLocalPage()) finish(); });
         }
@@ -682,106 +574,6 @@ public final class MainActivity extends FragmentActivity {
         }
     }
 
-    /** Generate the report only in private cache; immediately open Android share sheet.
-     *  Never invokes the document-save picker or writes to public Downloads.
-     *  Receiver receives a temporary read-only content URI via FileProvider.
-     */
-    private final class ReportPdfBridge {
-        @JavascriptInterface
-        public void shareReport(String json, String filename) {
-            if (!trustedLocalMainFrame || json == null || json.length() > 4_000_000) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                        "حجم بيانات التقرير غير صالح للمشاركة", Toast.LENGTH_LONG).show());
-                return;
-            }
-            synchronized (MainActivity.this) {
-                if (reportPdfBusy) return;
-                reportPdfBusy = true;
-            }
-            new Thread(() -> {
-                try {
-                    byte[] bytes = ReportPdfRenderer.render(new JSONObject(json));
-                    if (bytes.length == 0 || bytes.length > 15_000_000) throw new IOException("PDF غير صالح");
-                    File dir = new File(getCacheDir(), "shared_reports");
-                    if (!dir.exists() && !dir.mkdirs()) throw new IOException("تعذر إنشاء المجلد المؤقت");
-                    File[] previous = dir.listFiles();
-                    if (previous != null) for (File old : previous) {
-                        if (old.isFile() && old.lastModified() < System.currentTimeMillis() - 86_400_000L) old.delete();
-                    }
-                    String safe = (filename == null ? "Report.pdf" : filename)
-                            .replaceAll("[^\\p{L}\\p{N}_.-]", "_");
-                    if (!safe.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf")) safe += ".pdf";
-                    File file = new File(dir, java.util.UUID.randomUUID().toString().substring(0, 8) + "_" + safe);
-                    try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
-                        out.write(bytes);
-                        out.flush();
-                    }
-                    Uri uri = FileProvider.getUriForFile(MainActivity.this,
-                            getPackageName() + ".fileprovider", file);
-                    runOnUiThread(() -> {
-                        if (!isLocalPage()) return;
-                        Intent share = new Intent(Intent.ACTION_SEND);
-                        share.setType("application/pdf");
-                        share.putExtra(Intent.EXTRA_STREAM, uri);
-                        share.setClipData(ClipData.newUri(getContentResolver(), "تقرير PDF", uri));
-                        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        try { startActivity(Intent.createChooser(share, "مشاركة تقرير PDF")); }
-                        catch (Exception e) {
-                            Toast.makeText(MainActivity.this, "تعذر فتح مشاركة PDF", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                } catch (Exception e) {
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                            "تعذر تجهيز PDF: " + e.getMessage(), Toast.LENGTH_LONG).show());
-                } finally {
-                    reportPdfBusy = false;
-                }
-            }, "ta-share-report-pdf").start();
-        }
-    }
-
-    /** Generates an invoice PDF into private temporary cache and opens Share immediately.
-     *  Never launches ACTION_CREATE_DOCUMENT and never stores a permanent user file.
-     */
-    private final class InvoicePdfBridge {
-        private volatile boolean busy;
-        @JavascriptInterface public void shareInvoice(String json, String filename) {
-            if (!trustedLocalMainFrame || json == null || json.length() > 3_500_000) {
-                runOnUiThread(()->Toast.makeText(MainActivity.this,
-                        "حجم بيانات الفاتورة غير صالح للمشاركة",Toast.LENGTH_LONG).show());
-                return;
-            }
-            synchronized(this){if(busy)return;busy=true;}
-            new Thread(()->{
-                try {
-                    byte[] bytes=ReportPdfRenderer.renderInvoice(new JSONObject(json));
-                    if(bytes.length==0 || bytes.length>15_000_000) throw new IOException("PDF غير صالح");
-                    File dir=new File(getCacheDir(),"shared_invoices");
-                    if(!dir.exists() && !dir.mkdirs()) throw new IOException("تعذر إنشاء المجلد المؤقت");
-                    // Remove stale shared files only after receivers have had time to read them.
-                    File[] oldFiles=dir.listFiles();
-                    if(oldFiles!=null)for(File older:oldFiles)if(older.isFile() &&
-                            older.lastModified()<System.currentTimeMillis()-86_400_000L)older.delete();
-                    String safe=(filename==null?"Invoice.pdf":filename).replaceAll("[^\\p{L}\\p{N}_.-]","_");
-                    if(!safe.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf"))safe+=".pdf";
-                    File file=new File(dir,java.util.UUID.randomUUID().toString().substring(0,8)+"_"+safe);
-                    try(java.io.FileOutputStream out=new java.io.FileOutputStream(file)){out.write(bytes);out.flush();}
-                    Uri uri=FileProvider.getUriForFile(MainActivity.this,getPackageName()+".fileprovider",file);
-                    runOnUiThread(()->{
-                        Intent share=new Intent(Intent.ACTION_SEND);
-                        share.setType("application/pdf");
-                        share.putExtra(Intent.EXTRA_STREAM,uri);
-                        share.setClipData(ClipData.newUri(getContentResolver(),"الفاتورة PDF",uri));
-                        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        try {startActivity(Intent.createChooser(share,"إرسال الفاتورة PDF"));}
-                        catch(Exception e){Toast.makeText(MainActivity.this,"تعذر فتح مشاركة PDF",Toast.LENGTH_LONG).show();}
-                    });
-                }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"تعذر تجهيز PDF: "+e.getMessage(),Toast.LENGTH_LONG).show());}
-                finally{busy=false;}
-            },"ta-invoice-pdf-share").start();
-        }
-    }
-
     private final class BackupBridge {
         @JavascriptInterface
         public void saveBackup(String json, String filename) {
@@ -796,7 +588,7 @@ public final class MainActivity extends FragmentActivity {
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("application/json");
                 String safeName = (filename == null ? "SAN_SHINE_Backup.json" : filename)
-                        .replaceAll("[^\\p{L}\\p{N}_.-]", "_");
+                        .replaceAll("[^a-zA-Z0-9_.-]", "_");
                 intent.putExtra(Intent.EXTRA_TITLE, safeName);
                 try {
                     startActivityForResult(intent, SAVE_BACKUP);
@@ -814,15 +606,9 @@ public final class MainActivity extends FragmentActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMPORT) {
             if (pendingFileChooser != null) {
-                Uri[] selected = null;
-                if (resultCode == Activity.RESULT_OK && pendingItemPhotoCameraUri != null) {
-                    selected = new Uri[]{pendingItemPhotoCameraUri};
-                } else if (resultCode == Activity.RESULT_OK) {
-                    selected = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
-                }
-                pendingFileChooser.onReceiveValue(selected);
+                pendingFileChooser.onReceiveValue(
+                        WebChromeClient.FileChooserParams.parseResult(resultCode, data));
                 pendingFileChooser = null;
-                pendingItemPhotoCameraUri = null;
             }
         } else if (requestCode == SAVE_BACKUP) {
             String json = pendingBackupJson;
@@ -839,62 +625,6 @@ public final class MainActivity extends FragmentActivity {
                     runOnUiThread(() -> Toast.makeText(this, "تعذر حفظ النسخة الاحتياطية", Toast.LENGTH_LONG).show());
                 }
             }).start();
-        }
-    }
-
-    // Notifications are posted only after a successful IndexedDB ledger commit.
-    // Tapping one returns to the corresponding authenticated in-app transaction.
-    private final class LedgerNotificationsBridge {
-        @JavascriptInterface public void show(String id, String title, String detail) {
-            if (!trustedLocalMainFrame || id == null || id.isEmpty()) return;
-            runOnUiThread(() -> postLedgerNotification(id,title,detail));
-        }
-        @JavascriptInterface public String consumePending() {
-            if (!trustedLocalMainFrame) return "";
-            String id = pendingAlertId;
-            pendingAlertId = null;
-            return id == null ? "" : id;
-        }
-    }
-
-    private void postLedgerNotification(String id, String title, String detail) {
-        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this,
-                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            if (pendingAlerts.size() < 100) pendingAlerts.add(new String[]{id,title,detail});
-            if (!alertPermissionInFlight) {
-                alertPermissionInFlight = true;
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},REQUEST_ALERT_PERMISSION);
-            }
-            return;
-        }
-        NotificationManager manager=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        if(manager==null)return;
-        if(Build.VERSION.SDK_INT>=26) manager.createNotificationChannel(new NotificationChannel(
-                ALERT_CHANNEL,"إشعارات المحاسب التقني",NotificationManager.IMPORTANCE_DEFAULT));
-        Intent intent=new Intent(this,MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra("ledger_alert_id",id);
-        PendingIntent tap=PendingIntent.getActivity(this,id.hashCode(),intent,
-                PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-        Notification notification=new Notification.Builder(this,ALERT_CHANNEL)
-                .setSmallIcon(R.drawable.ic_stat_tiqany)
-                .setLargeIcon(android.graphics.BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher))
-                .setContentTitle(String.valueOf(title))
-                .setContentText(String.valueOf(detail))
-                .setStyle(new Notification.BigTextStyle().bigText(String.valueOf(detail)))
-                .setContentIntent(tap).setAutoCancel(true).build();
-        manager.notify(id.hashCode(),notification);
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        String id=intent==null?null:intent.getStringExtra("ledger_alert_id");
-        if (id != null && !id.isEmpty()) {
-            pendingAlertId=id;
-            if(webView!=null && trustedLocalMainFrame)webView.evaluateJavascript(
-                    "window.__nativeAlertTap && window.__nativeAlertTap("+JSONObject.quote(id)+");",null);
         }
     }
 
@@ -920,12 +650,10 @@ public final class MainActivity extends FragmentActivity {
         if (pendingFileChooser != null) pendingFileChooser.onReceiveValue(null);
         if (webView != null) {
             webView.removeJavascriptInterface("AndroidAutoBackup");
-            webView.removeJavascriptInterface("AndroidAlerts");
             webView.removeJavascriptInterface("NativeBarcode");
             webView.removeJavascriptInterface("NativeSecurity");
             webView.removeJavascriptInterface("Android");
             webView.removeJavascriptInterface("AndroidFiles");
-            webView.removeJavascriptInterface("AndroidReports");
             webView.removeJavascriptInterface("AndroidPrinter");
             webView.destroy();
             webView = null;
