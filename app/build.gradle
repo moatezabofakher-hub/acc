@@ -10,8 +10,8 @@ android {
         applicationId 'com.tiqany.accounting.solo'
         minSdk 26
         targetSdk 35
-        versionCode 7
-        versionName '3.5.51-solo.6-pdf'
+        versionCode 12
+        versionName '3.5.55-solo-last-purchase-net-cost'
     }
 
     // A permanent signing key is required for in-place updates. The keystore is

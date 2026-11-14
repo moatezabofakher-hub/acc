@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('node:fs');
+const assert=require('node:assert/strict');
+const html=fs.readFileSync('app/src/main/assets/www/index.html','utf8');
+const css=fs.readFileSync('app/src/main/assets/www/static/invoice-customer-highlight-3556.css','utf8');
+assert(html.includes('static/invoice-customer-highlight-3556.css'));
+assert(html.includes('min-w-0 ta-invoice-party-highlight'));
+assert(html.includes('aria-label="${partyLabelAr}" onchange="InvoiceController.changeInvoiceAccount(this.value)" class="ta-invoice-party-select'));
+assert(html.includes("const partyLabelAr = isPurchase ? 'المورد' : 'العميل'"));
+assert(css.includes('.ta-invoice-party-highlight .ta-invoice-party-select'));
+assert(css.includes('background:linear-gradient(150deg,#e8fff5'));
+assert(css.includes('border:2px solid #0b907e!important'));
+assert.match(fs.readFileSync('app/build.gradle','utf8'),/versionName '3\.5\.(?:54-solo-customer-highlight|55-solo-last-purchase-net-cost)'/);
+console.log('PASS: Solo purchase and sale invoice customer/supplier highlighted without affecting date');
