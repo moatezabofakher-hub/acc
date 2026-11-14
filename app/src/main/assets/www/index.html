@@ -941,6 +941,9 @@
     <link rel="stylesheet" href="static/glossy-ui-3549.css">
     <link rel="stylesheet" href="static/invoice-customer-highlight-3556.css">
 <link rel="stylesheet" href="static/windows-pos.css">
+<script defer src="static/arabic-currency-display.js"></script>
+<link rel="stylesheet" href="static/tiqany-3d-ui.css">
+<link rel="stylesheet" href="static/tiqany-currency-choice.css">
 </head>
 <body class="ta-premium-ui ta-3d-v3524 bg-slate-100 text-slate-800 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
 
@@ -7581,7 +7584,7 @@
                                 </select>
                             </div>
 
-                            <button type="button" ${State.settings.primaryOnlyMode ? 'disabled' : ''} onclick="InvoiceController.toggleInvoiceCurrency()" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95">
+                            <button type="button" ${State.settings.primaryOnlyMode ? 'disabled' : ''} onclick="InvoiceController.toggleInvoiceCurrency()" class="ta-invoice-currency-choice bg-sky-100 hover:bg-sky-200 border border-sky-300 text-sky-900 px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95">
                                 <i class="fas fa-coins text-amber-600 text-[10px]"></i>
                                 <span>${cur === 'SYP' ? 'ليرة سورية' : 'دولار'}</span>
                                 ${State.settings.primaryOnlyMode ? '' : '<span class="text-[9px] bg-white px-1 py-0.5 rounded border">تبديل</span>'}
