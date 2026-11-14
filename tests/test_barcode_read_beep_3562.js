@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const root=path.join(__dirname,'../app/src/main/assets/www');
+const hid=fs.readFileSync(path.join(root,'static/mobile-barcode-hid.js'),'utf8');
+const pos=fs.readFileSync(path.join(root,'static/windows-pos.js'),'utf8');
+const java=fs.readFileSync(path.join(__dirname,'../app/src/main/java/com/sunshine/accounting/ContinuousBarcodeActivity.java'),'utf8');
+assert.match(hid,/BarcodeFeedback\?\.read\(\)/);
+assert.doesNotMatch(pos,/BarcodeFeedback\?\.success/);
+assert.match(java,/scanned\.add\(code\);[\s\S]{0,250}startTone\(android\.media\.ToneGenerator\.TONE_PROP_BEEP/);
+console.log('Solo barcode beep moved to scanner read');
