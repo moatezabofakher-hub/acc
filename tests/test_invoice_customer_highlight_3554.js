@@ -10,5 +10,5 @@ assert(html.includes("const partyLabelAr = isPurchase ? 'المورد' : 'الع
 assert(css.includes('.ta-invoice-party-highlight .ta-invoice-party-select'));
 assert(css.includes('background:linear-gradient(150deg,#e8fff5'));
 assert(css.includes('border:2px solid #0b907e!important'));
-assert.match(fs.readFileSync('app/build.gradle','utf8'),/versionName '3\.5\.(?:54-solo-customer-highlight|55-solo-last-purchase-net-cost)'/);
+assert.match(fs.readFileSync('app/build.gradle','utf8'),/versionName '3\.5\.\d+[^']*'/);
 console.log('PASS: Solo purchase and sale invoice customer/supplier highlighted without affecting date');

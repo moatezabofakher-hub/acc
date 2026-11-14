@@ -3335,6 +3335,8 @@
             },
 
             openModal(html) {
+                // Clean up any nested currency picker before replacing modal content.
+                document.getElementById('itmCurrencyPopup')?.remove();
                 AppNav.clearModalDirty();
                 const c = document.getElementById('modalContainer');
                 const b = document.getElementById('modalBox');
@@ -3343,6 +3345,8 @@
             },
 
             requestCloseModal() {
+                const currencyPopup=document.getElementById('itmCurrencyPopup');
+                if(currencyPopup){currencyPopup.remove();return;}
                 if (typeof InvoiceController !== 'undefined' && InvoiceController.barcodeScanActive
                         && document.getElementById('invoiceBarcodeVideo')) {
                     UI.toast('اضغط زر × للخروج من كاميرا الباركود', 'info');
@@ -3364,6 +3368,7 @@
             },
 
             forceCloseModal() {
+                document.getElementById('itmCurrencyPopup')?.remove();
                 if (typeof InvoiceController !== 'undefined' && InvoiceController.barcodeScanActive) {
                     InvoiceController.stopBarcodeScanner();
                 }
@@ -5809,10 +5814,23 @@
                 const allowed = State.settings.primaryOnlyMode ? [CurrencyCatalog.primary()] : ['USD','SYP'];
                 const box=document.getElementById('itmCurrencyPopup');
                 if(box){box.remove();return;}
-                const wrapper=document.createElement('div');wrapper.id='itmCurrencyPopup';wrapper.className='fixed inset-0 z-[9999] bg-slate-900/45 flex justify-center items-center px-4';
+                const wrapper=document.createElement('div');
+                wrapper.id='itmCurrencyPopup';
+                // Tailwind is bundled as a precompiled stylesheet: z-[9999] is not generated.
+                // An explicit layer prevents this nested picker appearing behind the item editor.
+                wrapper.className='fixed inset-0 bg-slate-900/45 flex justify-center items-center px-4';
+                wrapper.style.cssText='position:fixed;inset:0;z-index:11000;';
+                wrapper.setAttribute('role','dialog');
+                wrapper.setAttribute('aria-modal','true');
+                wrapper.setAttribute('aria-label','اختر عملة تسعير الصنف');
                 wrapper.onclick=e=>{if(e.target===wrapper)wrapper.remove();};
                 wrapper.innerHTML=`<div class="w-full max-w-xs bg-white rounded-2xl p-4 space-y-3 shadow-xl text-right"><b>اختر عملة تسعير الصنف</b>${allowed.map(c=>`<button type="button" class="block w-full rounded-xl p-3 border bg-emerald-50 font-bold" data-curr="${c}">${c==='USD'?'دولار أمريكي USD':'ليرة سورية SYP'}</button>`).join('')}<button type="button" class="w-full p-2 border rounded-lg" data-close>إلغاء</button></div>`;
-                wrapper.querySelectorAll('[data-curr]').forEach(btn=>btn.onclick=()=>{this.setItemBaseCurrency(btn.dataset.curr);document.getElementById('itmCurrencySelect').textContent=btn.dataset.curr+' ▾';wrapper.remove();});
+                wrapper.querySelectorAll('[data-curr]').forEach(btn=>btn.onclick=()=>{
+                    this.setItemBaseCurrency(btn.dataset.curr);
+                    const pickerButton=document.getElementById('itmCurrencySelect');
+                    if(pickerButton)pickerButton.innerHTML='<i class="fas fa-coins ml-1" aria-hidden="true"></i>'+btn.dataset.curr+' ▾';
+                    wrapper.remove();
+                });
                 wrapper.querySelector('[data-close]').onclick=()=>wrapper.remove();document.body.append(wrapper);
             },
             addBundleLine() {
