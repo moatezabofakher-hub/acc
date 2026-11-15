@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const helper=fs.readFileSync(path.join(root,'app/src/main/assets/www/static/arabic-currency-display.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'app/src/main/assets/www/index.html'),'utf8');
+assert.match(helper,/option\.setAttribute\('value', option\.value\)/);
+assert.match(helper,/preserveOptionValue\(node\)/);
+assert.match(html,/VoucherController\.toggleCurrency\(\)/);
+assert.doesNotMatch(html,/<select[^>]+id="vCurrency"/);
+console.log('PASS 3.5.83 independent: display label cannot change select machine code; voucher currency uses direct button.');
