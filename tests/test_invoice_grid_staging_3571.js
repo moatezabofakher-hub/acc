@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const html=fs.readFileSync('app/src/main/assets/www/index.html','utf8');
+assert.match(html,/gridPending = Object\.create\(null\)/);
+assert.match(html,/id="itemGridApplyButton"/);
+assert.match(html,/applyGridSelection\(\)/);
+assert.match(html,/updateGridSelectionCounter\(\)/);
+assert.match(html,/if \(next <= 0\) delete this\.gridPending\[itemId\]/);
+assert.doesNotMatch(html,/إغلاق الشبكة \(\$\{this\.draft\.rows\.length\} أصناف بالفاتورة\)/);
+console.log('PASS independent Android app stages item-grid choices with immediate Add counter');
