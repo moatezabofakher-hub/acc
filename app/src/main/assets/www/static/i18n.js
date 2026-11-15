@@ -1,6 +1,10 @@
 /* Technical Accountant language pack — UI only. Database values/IDs are never translated. */
 const I18n = {
     en: {
+        "تبديل عملة السند": "Switch voucher currency",
+        "تبديل العملة مباشرة": "Switch currency instantly",
+        "ليرة سورية (SYP)": "Syrian pound (SYP)",
+        "دولار (USD)": "US dollar (USD)",
         "موظف البيع": "Sales representative",
         "موظف بيع": "Sales representative",
         "موظفو البيع": "Sales representatives",
