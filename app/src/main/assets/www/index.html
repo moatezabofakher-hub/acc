@@ -1110,6 +1110,111 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
 </style>
 <link rel="stylesheet" href="static/tiqany-support.css">
 <link rel="stylesheet" href="static/tiqany-ux-3588.css">
+
+<style id="ta-invoice-header-layout-3595">
+.ta-link-label{display:none!important} /* Connected devices only, color conveys live state. */
+#ta-desktop-phone-connection{padding:2px 5px!important;gap:2px!important;min-height:22px!important;min-width:37px!important}
+#ta-desktop-phone-connection .ta-link-devices{font-size:10px!important;gap:1px!important}
+#ta-desktop-phone-connection .ta-link-dot{width:5px!important;height:5px!important}
+#topAppBar.ta-operation-header{direction:rtl!important;display:flex!important;gap:5px!important;padding:6px 9px!important;min-height:49px!important}
+#topAppBar.ta-operation-header #headerSettingsBtn,#topAppBar.ta-operation-header #headerNotificationsBtn{display:none!important}
+#topAppBar.ta-operation-header #headerBackBtn{display:flex!important;order:-2!important;margin:0!important;min-width:36px!important;width:36px!important;height:36px!important;flex-shrink:0!important}
+#topAppBar.ta-operation-header > div:first-child{direction:rtl!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;min-width:0!important;flex:1!important}
+#topAppBar.ta-operation-header #headerTitleWrap{position:static!important;transform:none!important;display:flex!important;flex:1!important;min-width:0!important;max-width:none!important;width:auto!important;align-items:flex-start!important;justify-content:center!important;gap:0!important;margin:0!important;pointer-events:auto!important}
+#topAppBar.ta-operation-header #screenTitle{font-size:clamp(13px,3.5vw,17px)!important;white-space:nowrap!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important;justify-content:flex-start!important}
+#topAppBar.ta-operation-header #screenTitle>i{display:none!important}
+#topAppBar.ta-operation-header #screenSubtitle{display:none!important}
+#topAppBar.ta-operation-header .ta-header-connections{display:flex!important;gap:3px!important;align-items:center!important;width:auto!important;justify-content:flex-start!important}
+#topAppBar.ta-operation-header .ta-header-connections .ta-link-status{padding:2px 4px!important;margin:0!important;min-width:31px!important;min-height:20px!important;font-size:9px!important}
+#topAppBar.ta-operation-header .ta-header-connections .ta-staff-counter{display:none!important}
+#topAppBar.ta-operation-header #headerActionGroup{flex:0 0 auto!important;margin:0!important;gap:2px!important}
+#topAppBar.ta-operation-header #topBarRateButton{font-size:10px!important;padding:3px 4px!important}
+#topAppBar.ta-operation-header #unsavedGuardBadge{display:none!important}
+.ta-invoice-control-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);gap:7px;direction:rtl;align-items:start}
+.ta-invoice-control-grid>.ta-invoice-field{min-width:0;background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:8px}
+.ta-invoice-control-grid .ta-invoice-party-highlight{background:#e0f2fe!important;border:1px solid #7dd3fc!important;border-radius:10px!important;padding:7px!important}
+.ta-invoice-control-grid label{display:block;font-size:12px;font-weight:800;color:#164e63;margin-bottom:5px}
+.ta-invoice-control-grid select{width:100%;min-width:0;font-weight:700;font-size:12px;max-width:100%}
+.ta-invoice-control-grid .ta-invoice-currency-choice{width:100%;min-height:36px;justify-content:center;font-size:12px!important}
+.ta-invoice-control-grid .ta-invoice-currency-choice i{font-size:11px!important}
+.ta-invoice-control-grid .ta-invoice-date-visible{display:flex;flex-wrap:wrap;gap:4px;direction:ltr;min-width:0}
+.ta-invoice-control-grid .ta-invoice-date-visible input{min-width:0;font-size:12px!important;flex:1 1 100%;width:100%!important}
+.ta-invoice-control-grid .ta-invoice-date-visible input[type=time]{width:100%!important;flex-shrink:1}
+.ta-invoice-type-row{display:flex;align-items:center;gap:6px;justify-content:flex-start;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
+.ta-payment-cycle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:13px;padding:10px 13px;font-size:14px;font-weight:900;border:1px solid;box-shadow:0 3px 0 #64748b33;cursor:pointer}
+.ta-payment-cycle.ta-pay-cash{background:#dcfce7;color:#166534;border-color:#86efac}
+.ta-payment-cycle.ta-pay-partial{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.ta-payment-cycle.ta-pay-credit{background:#ffe4e6;color:#9f1239;border-color:#fda4af}
+@media(max-width:360px){.ta-invoice-control-grid{grid-template-columns:minmax(0,1fr) minmax(0,.72fr);gap:4px}.ta-invoice-control-grid .ta-invoice-date-visible input[type=time]{width:73px!important}.ta-invoice-control-grid .ta-invoice-date-visible input{font-size:10px!important}#topAppBar.ta-operation-header #topBarRateButton{display:none!important}}
+</style>
+
+<style id="ta-invoice-footer-3596">
+/* 3.5.96: the regular dock is hidden only while editing an invoice / POS. */
+body.ta-workspace-screen nav.ta-bottom-nav{display:none!important}
+body.ta-invoice-editor-screen #mainContent{padding-bottom:calc(148px + env(safe-area-inset-bottom,0px))!important}
+body.ta-invoice-editor-screen .ta-invoice-save-footer{position:fixed;bottom:0;left:0;right:0;z-index:29;direction:rtl;display:flex;flex-direction:column;gap:7px;padding:8px max(10px,env(safe-area-inset-right,0px)) calc(9px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(180deg,#effaff,#fff);box-shadow:0 -5px 22px #0b47602b;border-top:2px solid #75cfe1;max-height:42vh;overflow-y:auto}
+.ta-invoice-save-footer .ta-footer-balances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.ta-invoice-save-footer .ta-balance-tile{min-width:0;background:white;border:1px solid #bae6fd;border-radius:10px;padding:5px;text-align:center;font-size:11px;color:#14536c}
+.ta-invoice-save-footer .ta-balance-tile strong{display:block;font-size:12px;color:#064e3b;overflow-wrap:anywhere}
+.ta-invoice-save-footer .ta-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ta-invoice-save-footer .ta-footer-actions button{min-width:0;border-radius:11px;min-height:39px;padding:7px 5px;font-weight:900;font-size:12px;color:#fff}
+.ta-invoice-save-footer .ta-footer-actions button:first-child{background:#047857}.ta-invoice-save-footer .ta-footer-actions button:last-child{background:#0e4260}
+.ta-invoice-control-grid>.ta-invoice-pricing-choice{grid-column:2;grid-row:3;margin:0!important;padding:7px!important}
+.ta-invoice-control-grid>.ta-invoice-pricing-choice select{font-size:12px!important;min-width:0}
+.ta-invoice-control-grid .ta-invoice-warehouse-field{grid-column:2;grid-row:2}
+.ta-invoice-control-grid .ta-invoice-date-field{grid-column:1;grid-row:2}
+.ta-invoice-currency-choice,.ta-invoice-currency-choice i{color:#0284c7!important;background:#e0f7ff!important;border-color:#7dd3fc!important}
+.ta-invoice-control-grid .ta-invoice-field label .fa-coins{color:#38bdf8!important}
+#topAppBar.ta-operation-header #headerSettingsBtn,#topAppBar.ta-operation-header #headerNotificationsBtn,body:not(.ta-dashboard-screen) #headerSettingsBtn{display:none!important}
+@media(max-width:420px){body.ta-invoice-editor-screen #mainContent{padding-bottom:157px!important}.ta-invoice-save-footer .ta-footer-actions button{font-size:11px}.ta-invoice-save-footer .ta-balance-tile strong{font-size:11px}}
+</style>
+
+<style id="ta-invoice-reach-last-line-3597">
+/* The invoice editor scrollport must extend BELOW the actual height of the fixed save bar.
+   This selector deliberately outranks the general 3.5.78 scrollport / IME rules. */
+html body.ta-3d-v3524.ta-invoice-editor-screen > main#mainContent.ta-main,
+html.ta-ime-open body.ta-3d-v3524.ta-invoice-editor-screen > main#mainContent.ta-main {
+  padding-bottom:calc(var(--ta-invoice-footer-height, 170px) + 22px)!important;
+  scroll-padding-bottom:calc(var(--ta-invoice-footer-height, 170px) + 22px)!important;
+}
+/* The bottom strip is never a second scrolling panel: all invoice details scroll in mainContent. */
+body.ta-invoice-editor-screen .ta-invoice-save-footer {
+  box-sizing:border-box;max-height:none!important;overflow:visible!important;
+  padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+}
+/* Date/time spans the column next to the warehouse, with pricing directly under warehouse. */
+.ta-invoice-control-grid .ta-invoice-date-field{grid-column:1;grid-row:2 / span 2}
+.ta-invoice-control-grid .ta-invoice-warehouse-field{grid-column:2;grid-row:2}
+.ta-invoice-control-grid > .ta-invoice-pricing-choice{grid-column:2;grid-row:3}
+/* Keep the balances legible without making the bar tall on small displays. */
+.ta-invoice-save-footer .ta-footer-balances{gap:6px}
+.ta-invoice-save-footer .ta-balance-tile{padding:5px 6px;overflow:hidden}
+.ta-invoice-save-footer .ta-balance-tile span{display:block;font-size:11px}
+.ta-invoice-save-footer .ta-balance-tile strong{font-size:clamp(11px,2.8vw,15px);line-height:1.35}
+@media (max-width:360px) {
+ .ta-invoice-save-footer .ta-footer-actions button{min-height:36px!important;padding:5px 3px!important;font-size:11px!important}
+ .ta-invoice-save-footer .ta-balance-tile{padding:4px!important}
+}
+</style>
+
+<style id="ta-invoice-pickers-35100">
+/* The whole icon/label opens the native selection sheet; no visible dropdown arrow. */
+.ta-invoice-control-grid .ta-quick-picker {position:relative;display:flex;align-items:center;justify-content:center;min-height:52px;width:100%;padding:9px 7px;overflow:hidden;border-radius:12px;cursor:pointer;box-shadow:0 2px 0 #0891b230;background:linear-gradient(145deg,#f1fdff,#d6f4ff);border:1.5px solid #67cde5;color:#084b65}
+.ta-invoice-control-grid .ta-quick-picker__face {display:flex;align-items:center;justify-content:center;gap:7px;width:100%;text-align:center;direction:rtl;font-size:clamp(11px,2.9vw,14px);font-weight:900;overflow-wrap:anywhere;line-height:1.4;pointer-events:none}
+.ta-invoice-control-grid .ta-quick-picker__face i {font-size:16px;flex-shrink:0;color:#0369a1}
+.ta-invoice-control-grid .ta-quick-picker select.ta-quick-picker__native,
+.ta-invoice-control-grid .ta-quick-picker select#invoicePricingTier {position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;padding:0!important;margin:0!important;opacity:0!important;z-index:1;cursor:pointer;appearance:none!important;-webkit-appearance:none!important;outline:0;border:0;font-size:16px!important}
+.ta-invoice-control-grid .ta-quick-picker:focus-within {outline:3px solid #0284c7;outline-offset:2px}
+.ta-invoice-control-grid .ta-invoice-pricing-choice {border:0!important;padding:0!important;box-shadow:none!important;background:none!important}
+.ta-invoice-control-grid .ta-invoice-pricing-choice .ta-quick-picker {background:linear-gradient(145deg,#eff6ff,#dbeafe);border-color:#93c5fd;color:#1e40af}
+.ta-invoice-control-grid .ta-invoice-pricing-choice .ta-quick-picker__face i {color:#2563eb}
+/* Payment badge itself is tinted prominently, not only the row behind it. */
+.ta-payment-cycle .ta-payment-method-value {display:inline-flex;gap:9px;align-items:center}
+.ta-payment-cycle .ta-payment-method-value > i {display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;min-width:32px;border-radius:10px;color:white;box-shadow:0 3px 7px #0002,inset 0 1px 2px #fff6;font-size:15px}
+.ta-payment-cycle.ta-pay-cash .ta-payment-method-value > i {background:linear-gradient(155deg,#34d399,#059669,#047857)}
+.ta-payment-cycle.ta-pay-partial .ta-payment-method-value > i {background:linear-gradient(155deg,#60a5fa,#2563eb,#1d4ed8)}
+.ta-payment-cycle.ta-pay-credit .ta-payment-method-value > i {background:linear-gradient(155deg,#fda4af,#f472b6,#db2777)}
+</style>
 </head>
 <body class="ta-premium-ui ta-3d-v3524 bg-slate-100 text-slate-800 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
 
@@ -2547,6 +2652,16 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                     return;
                 }
 
+                // An open stock transfer is a sub-editor. Back must never leave it
+                // silently; closeTransferForm asks before discarding selected items.
+                if(this.current()?.screen === 'warehouses'){
+                    const transferPanel=document.getElementById('warehouseTransferPanel');
+                    if(transferPanel && transferPanel.hidden === false){
+                        WarehouseController.closeTransferForm();
+                        return;
+                    }
+                }
+
                 // Empty invoice/POS: Back closes it immediately, with no unsaved-data dialog.
                 // Do not change the guarded behavior when at least one item exists.
                 if (['invoice_form','pos'].includes(this.current()?.screen) &&
@@ -2624,6 +2739,9 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
 
             renderCurrent() {
                 const { screen, params } = this.current();
+                document.body.classList.toggle('ta-dashboard-screen',screen==='dashboard');
+                document.body.classList.toggle('ta-workspace-screen',['invoice_form','pos','pos_form','invoice_print'].includes(screen));
+                document.body.classList.toggle('ta-invoice-editor-screen',screen==='invoice_form');
                 // A successful setting change may re-render this screen before the
                 // queued <details> toggle event has updated expandedSections.
                 // Remember the live panel and its scroll position, rather than
@@ -2635,6 +2753,7 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                 if (backBtn) {
                     const topAppBar = document.getElementById('topAppBar');
                     if (topAppBar) topAppBar.classList.toggle('dashboard-header', screen === 'dashboard');
+                    if (topAppBar) topAppBar.classList.toggle('ta-operation-header', ['invoice_form', 'invoice_print', 'voucher_form'].includes(screen));
                     backBtn.classList.toggle('dashboard-settings-button', screen === 'dashboard');
                     backBtn.classList.toggle('hidden', screen === 'dashboard');
                     if (screen === 'dashboard') {
@@ -4197,6 +4316,9 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
             renderWarehouses(main, params = {}) {
                 UI.setHeader('<i class="fas fa-box-open text-sky-400"></i> <span>المستودعات والمناقلات</span>',
                              'أرصدة مستقلة لكل مستودع ومناقلة لا تؤثر على المبيعات أو الأرباح');
+                // A refresh of this route must never discard an in-progress stock transfer.
+                // Capture the visible editor BEFORE replacing main.innerHTML.
+                const transferEditorSnapshot = WarehouseController.captureTransferEditorState();
                 const wopts = WarehouseController.options(State.settings.selectedWarehouseId);
                 const warehouseName = id => WarehouseController.name(id);
                 main.innerHTML = `
@@ -4268,14 +4390,19 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                         ${WarehouseController.renderTransferHistoryHtml()}
                     </div>
                 `;
-                WarehouseController.transferDraft = [];
-                WarehouseController.editingTransferBatchId = null;
-                WarehouseController.filterTransferGrid();
-                WarehouseController.refreshTransferAvailability();
-                WarehouseController.renderTransferDraft();
+                if (transferEditorSnapshot) {
+                    WarehouseController.restoreTransferEditorState(transferEditorSnapshot);
+                } else {
+                    WarehouseController.transferDraft = [];
+                    WarehouseController.editingTransferBatchId = null;
+                    WarehouseController.filterTransferGrid();
+                    WarehouseController.refreshTransferAvailability();
+                    WarehouseController.renderTransferDraft();
+                }
                 if (params.action === 'add') WarehouseController.toggleWarehouseCreate();
-                if (params.action === 'transfer') {
+                if (params.action === 'transfer' && !transferEditorSnapshot) {
                     WarehouseController.openTransferForm();
+                    delete params.action;
                 }
             },
 
@@ -6522,10 +6649,58 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                 }).join('');
                 UI.openModal(`<div class="text-right" dir="rtl"><h3 class="font-extrabold text-base mb-3"><i class="fas fa-boxes-stacked text-teal-700 ml-1"></i>قائمة المستودعات</h3>${list}<p class="text-[11px] text-slate-500">لا يمكن حذف المستودع الرئيسي أو أي مستودع يحوي أرصدة أو حركات محفوظة، حفاظاً على سلامة الجرد.</p><button type="button" onclick="UI.forceCloseModal()" class="mt-3 p-3 w-full bg-slate-100 rounded-xl font-bold">إغلاق</button></div>`);
             },
+            captureTransferEditorState(){
+                const panel=document.getElementById('warehouseTransferPanel');
+                if(!panel || panel.hidden !== false) return null;
+                const fieldIds=['transferFrom','transferTo','transferDate','transferNote','transferSearchInput','transferCategory'];
+                const fields={};
+                for(const id of fieldIds){
+                    const input=document.getElementById(id);
+                    if(input) fields[id]=input.value;
+                }
+                return {
+                    fields,
+                    draft:(this.transferDraft||[]).map(row=>({...row})),
+                    editingTransferBatchId:this.editingTransferBatchId||null,
+                    scrollTop:panel.scrollTop||0,
+                    gridScrollTop:document.getElementById('transferGrid')?.scrollTop||0
+                };
+            },
+            restoreTransferEditorState(snapshot){
+                if(!snapshot)return;
+                const panel=document.getElementById('warehouseTransferPanel');
+                if(!panel)return;
+                panel.hidden=false;
+                this.editingTransferBatchId=snapshot.editingTransferBatchId;
+                this.transferDraft=snapshot.draft.map(row=>({...row}));
+                for(const [id,value] of Object.entries(snapshot.fields)){
+                    const input=document.getElementById(id);
+                    if(input)input.value=value;
+                }
+                const editing=!!this.editingTransferBatchId;
+                const title=document.getElementById('transferFormTitle');
+                if(title)title.textContent=editing?'تعديل فاتورة مناقلة':'فاتورة مناقلة جديدة';
+                const banner=document.getElementById('transferEditBanner');
+                if(banner)banner.hidden=!editing;
+                const ref=document.getElementById('transferEditingRef');
+                if(ref && editing)ref.textContent='رقم الفاتورة: '+this.editingTransferBatchId;
+                const cancel=document.getElementById('transferCancelEditButton');
+                if(cancel)cancel.hidden=!editing;
+                this.filterTransferGrid();
+                this.updateTransferGridSelections();
+                this.renderTransferDraft();
+                if(typeof this.refreshTransferHistory==='function')this.refreshTransferHistory();
+                panel.scrollTop=snapshot.scrollTop;
+                const grid=document.getElementById('transferGrid');
+                if(grid)grid.scrollTop=snapshot.gridScrollTop;
+            },
             openTransferForm(edit=false){
                 const panel=document.getElementById('warehouseTransferPanel');if(!panel)return;
-                if(!edit && !panel.hidden && (this.transferDraft||[]).length){
-                    UI.toast('توجد فاتورة مناقلة غير محفوظة؛ احفظها أو أغلقها أولاً','warn');
+                if(!edit && panel.hidden === false){
+                    // Opening a transfer already on screen is an idempotent action.
+                    // Never clear a draft (including an empty draft's date/warehouses).
+                    if((this.transferDraft||[]).length)
+                        UI.toast('توجد فاتورة مناقلة غير محفوظة؛ احفظها أو أغلقها أولاً','warn');
                     Views.jumpToEntry('warehouseTransferPanel','transferSearchInput');return;
                 }
                 panel.hidden=false;
@@ -6645,8 +6820,11 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                     existing.qty=String(Math.round(next*10000)/10000);
                 }else{
                     const units=Array.isArray(item.units)&&item.units.length?item.units:[{name:'وحدة كبرى',factor:1}];
-                    // The editable row still supports fractions and non-base units.
-                    this.transferDraft.push({itemId,qty:'1',factor:String(Number(units[0].factor)||1)});
+                    // The first click also must obey available source stock.
+                    const factor=Number(units[0].factor)||1;
+                    if(1/factor>available+0.00001)
+                        return UI.toast('الكمية المطلوبة تتجاوز رصيد المصدر للصنف: '+item.name,'warn');
+                    this.transferDraft.push({itemId,qty:'1',factor:String(factor)});
                 }
                 this.updateTransferGridSelections();
                 this.renderTransferDraft();
@@ -6760,6 +6938,10 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
             cancelTransferEdit(){
                 this.editingTransferBatchId=null;
                 this.transferDraft=[];
+                // Explicitly close the old editor before refreshing, otherwise
+                // its snapshot would restore the cancelled invoice on the new page.
+                const panel=document.getElementById('warehouseTransferPanel');
+                if(panel)panel.hidden=true;
                 AppNav.renderCurrent();
                 this.openTransferForm();
             },
@@ -6859,6 +7041,10 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                     LicenseManager.updateBadgeUI();
                     this.transferDraft=[];
                     this.editingTransferBatchId=null;
+                    // A saved invoice is no longer an active draft. Refresh the
+                    // history without reopening an empty editor by accident.
+                    const panel=document.getElementById('warehouseTransferPanel');
+                    if(panel)panel.hidden=true;
                     UI.toast(originalDoc?'تم تعديل فاتورة المناقلة وحفظ جميع أصنافها وأرصدتها':'تم حفظ فاتورة المناقلة بنجاح','success');
                     AppNav.renderCurrent();
                 }finally{
@@ -7039,10 +7225,17 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                 this.markModified();
             },
             changeInvoicePricingTier(tier) {
-                if (!this.draft || !['sale','sale_return'].includes(this.draft.type)) return;
+                if (!this.draft || !['sale','sale_return','purchase','purchase_return'].includes(this.draft.type)) return;
                 const allowed = ['account','wholesale','center','consumer'];
                 if (!allowed.includes(tier)) return;
                 this.draft.priceTierOverride = tier;
+                // A pricing tier on purchase forms is a selectable display preference;
+                // purchase prices remain based on cost and are never repriced as sales.
+                if (['purchase','purchase_return'].includes(this.draft.type)) {
+                    this.markModified();
+                    this.paintForm(document.getElementById('mainContent'));
+                    return;
+                }
                 for (const row of this.draft.rows || []) {
                     if (row.priceManuallySet) continue; // Respect deliberately overridden line prices.
                     const item=State.items.find(x=>x.id===row.itemId);
@@ -7196,8 +7389,14 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                   <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-2 text-center"><div class="text-[11px] font-bold text-emerald-800">الرصيد النهائي المتوقع</div><strong id="draftBalanceAfter" class="block mt-1 text-xs font-extrabold text-emerald-800">${final}</strong></div></div>
                   <div id="draftBalanceHint" class="mt-2 text-[10px] text-slate-600">${note}</div></div>`;
             },
+            footerBalancesHTML() {
+                const p=this.draftBalancePreview(),c=this.draft.currency;
+                const before=p.available?this.draftBalanceLabel(p.before,c):'—';
+                const after=p.available?this.draftBalanceLabel(p.after,c):'—';
+                return `<div class="ta-balance-tile"><span>الرصيد السابق (${c})</span><strong id="draftBalanceBefore">${before}</strong></div><div class="ta-balance-tile"><span>الرصيد المتوقع (${c})</span><strong id="draftBalanceAfter">${after}</strong></div>`;
+            },
             refreshDraftBalanceDOM() {
-                const box=document.querySelector('[data-draft-balance]');
+                const box=document.querySelector('.ta-invoice-save-footer');
                 if(!box)return;
                 const p=this.draftBalancePreview(),c=this.draft.currency;
                 const before=document.getElementById('draftBalanceBefore');
@@ -7685,8 +7884,15 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                 UI.toast(`تم تحديث أسعار جميع المواد في الفاتورة حسب سعر الصرف (${rate})`, 'success');
             },
 
+            cyclePaymentMethod() {
+                const methods = ['cash','partial','credit'];
+                const next = methods[(methods.indexOf(this.draft.paymentMethod) + 1) % methods.length];
+                this.changePaymentMethod(next);
+            },
             changePaymentMethod(method) {
+                const previousMethod = this.draft.paymentMethod;
                 this.draft.paymentMethod = method;
+                if (method === 'partial' && previousMethod !== 'partial') this.draft.paidAmount = 0;
                 if (method === 'cash') {
                     this.draft.paidAmount = this.draft.netTotal;
                 } else if (method === 'credit') {
@@ -7845,73 +8051,61 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
 
                 main.innerHTML = `
                     <div class="invoice-entry-top rounded-2xl p-3 mb-3 space-y-2.5">
-                        <div class="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-100 pb-2">
-                            <div class="flex items-center gap-1">
-                                <span class="bg-slate-900 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md">#${d.number}</span>
-                                <i class="fas fa-file-invoice text-emerald-600 text-[10px]" title="نوع الفاتورة"></i>
-                                <select onchange="InvoiceController.changeInvoiceType(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold">
-                                    <option value="sale" ${d.type === 'sale' ? 'selected' : ''}>فاتورة مبيعات</option>
-                                    <option value="purchase" ${d.type === 'purchase' ? 'selected' : ''}>فاتورة مشتريات</option>
-                                    <option value="sale_return" ${d.type === 'sale_return' ? 'selected' : ''}>مردود مبيعات</option>
-                                    <option value="purchase_return" ${d.type === 'purchase_return' ? 'selected' : ''}>مردود مشتريات</option>
-                                </select>
-                            </div>
-
-                            <button type="button" ${State.settings.primaryOnlyMode ? 'disabled' : ''} onclick="InvoiceController.toggleInvoiceCurrency()" class="ta-invoice-currency-choice bg-sky-100 hover:bg-sky-200 border border-sky-300 text-sky-900 px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95">
-                                <i class="fas fa-coins text-amber-600 text-[10px]"></i>
-                                <span>${cur === 'SYP' ? 'ليرة سورية' : 'دولار'}</span>
-                                ${State.settings.primaryOnlyMode ? '' : '<span class="text-[9px] bg-white px-1 py-0.5 rounded border">تبديل</span>'}
-                            </button>
+                      <div class="ta-invoice-type-row">
+                        <span class="bg-slate-900 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md">#${d.number}</span>
+                        <select aria-label="نوع الفاتورة" onchange="InvoiceController.changeInvoiceType(this.value)" class="bg-slate-100 border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-bold">
+                          <option value="sale" ${d.type === 'sale' ? 'selected' : ''}>فاتورة مبيعات</option>
+                          <option value="purchase" ${d.type === 'purchase' ? 'selected' : ''}>فاتورة مشتريات</option>
+                          <option value="sale_return" ${d.type === 'sale_return' ? 'selected' : ''}>مردود مبيعات</option>
+                          <option value="purchase_return" ${d.type === 'purchase_return' ? 'selected' : ''}>مردود مشتريات</option>
+                        </select>
+                      </div>
+                      <div class="ta-invoice-control-grid">
+                        <div class="ta-invoice-field ta-invoice-party-highlight">
+                          <div class="flex items-center justify-between gap-1 mb-1"><label><i class="fas fa-user text-emerald-600"></i> ${partyLabelAr}</label>
+                          <button type="button" onclick="AccountController.openAccountModal(null, true, '${targetAccountType}')" class="text-[10px] font-extrabold text-emerald-700">+ جديد</button></div>
+                          <select aria-label="${partyLabelAr}" onchange="InvoiceController.changeInvoiceAccount(this.value)" class="ta-invoice-party-select border border-slate-300 rounded-lg px-2 py-2 bg-white">
+                            <option value="">-- ${isPurchase ? 'مورد نقدي مباشر' : 'عميل نقدي مباشر'} --</option>
+                            ${State.accounts.filter(a => a.type === targetAccountType).map(a => `<option value="${a.id}" ${d.accountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+                          </select>
                         </div>
-
-                        <div class="mb-1.5 rounded-lg bg-sky-50 border border-sky-200 px-2 py-1.5">
-                            <label class="block text-[10px] font-extrabold text-sky-900 mb-1">المستودع الذي تتأثر به هذه الفاتورة</label>
-                            <select onchange="InvoiceController.changeWarehouse(this.value)" class="w-full bg-white rounded-lg p-2 border border-sky-300 text-xs">
-                                ${WarehouseController.options(d.warehouseId || 'wh_main')}
+                        <div class="ta-invoice-field"><label><i class="fas fa-coins text-amber-600"></i> العملة</label>
+                          <button type="button" ${State.settings.primaryOnlyMode ? 'disabled' : ''} onclick="InvoiceController.toggleInvoiceCurrency()" class="ta-invoice-currency-choice bg-sky-100 border border-sky-300 text-sky-900 px-2 py-1 rounded-lg font-extrabold flex items-center gap-1">
+                            <i class="fas fa-coins text-amber-600"></i><span>${cur === 'SYP' ? 'ليرة سورية' : 'دولار'}</span>
+                          </button>
+                        </div>
+                        <div class="ta-invoice-field ta-invoice-date-field"><label><i class="fas fa-calendar-days text-blue-600"></i> التاريخ والوقت</label>
+                          <div class="ta-invoice-date-visible" lang="en" dir="ltr">
+                            <input aria-label="تاريخ الفاتورة" type="text" inputmode="numeric" autocomplete="off" value="${this.visibleInvoiceDate(d.date).day}" placeholder="YYYY-MM-DD" onchange="InvoiceController.changeInvoiceDatePart('day',this.value)" class="w-full border border-sky-300 rounded-lg px-1 py-2 text-center font-extrabold" />
+                            <input aria-label="وقت الفاتورة" type="time" value="${this.visibleInvoiceDate(d.date).time}" onchange="InvoiceController.changeInvoiceDatePart('time',this.value)" class="border border-sky-300 rounded-lg px-1 py-2 font-bold" />
+                          </div>
+                        </div>
+                        <div class="ta-invoice-field ta-invoice-warehouse-field">
+                          <div class="ta-quick-picker" title="اضغط لاختيار المستودع">
+                            <span class="ta-quick-picker__face"><i class="fas fa-warehouse" aria-hidden="true"></i><span>${AppEscape.text(WarehouseController.name(d.warehouseId || 'wh_main'))}</span></span>
+                            <select class="ta-quick-picker__native" aria-label="اختيار المستودع الحالي" onchange="InvoiceController.changeWarehouse(this.value)">
+                              ${WarehouseController.options(d.warehouseId || 'wh_main')}
                             </select>
+                          </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-                            <div class="min-w-0 ta-invoice-party-highlight">
-                                <div class="flex items-center justify-between mb-0.5 gap-1">
-                                    <label class="font-bold text-slate-700 flex items-center gap-1"><i class="fas fa-user text-emerald-600 text-[9px]"></i>${partyLabelAr}</label>
-                                    <button type="button" onclick="AccountController.openAccountModal(null, true, '${targetAccountType}')" class="text-[9px] text-emerald-600 font-bold whitespace-nowrap">+ جديد</button>
-                                </div>
-                                <select aria-label="${partyLabelAr}" onchange="InvoiceController.changeInvoiceAccount(this.value)" class="ta-invoice-party-select w-full border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-slate-50">
-                                    <option value="">-- ${isPurchase ? 'مورد نقدي مباشر' : 'عميل نقدي مباشر'} --</option>
-                                    ${State.accounts.filter(a => a.type === targetAccountType).map(a => `<option value="${a.id}" ${d.accountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="flex items-center gap-1 font-bold text-slate-700 mb-0.5"><i class="fas fa-calendar-days text-blue-600 text-[9px]"></i>التاريخ</label>
-                                <div class="ta-invoice-date-visible flex items-center gap-1" dir="ltr">
-                                    <input aria-label="تاريخ الفاتورة سنة-شهر-يوم" type="text" inputmode="numeric" autocomplete="off" value="${this.visibleInvoiceDate(d.date).day}" placeholder="YYYY-MM-DD" onchange="InvoiceController.changeInvoiceDatePart('day',this.value)" class="w-full min-w-0 bg-white border border-sky-300 rounded-lg px-1.5 py-1.5 text-[11px] font-extrabold text-slate-900 text-center" style="direction:ltr;min-width:0">
-                                    <input aria-label="وقت الفاتورة" type="time" value="${this.visibleInvoiceDate(d.date).time}" onchange="InvoiceController.changeInvoiceDatePart('time',this.value)" class="w-[84px] shrink-0 min-w-0 bg-white border border-sky-300 rounded-lg px-1 py-1.5 text-[10px] font-bold" style="direction:ltr">
-                                </div>
-                            </div>
-                        </div>
-
-                        ${['sale','sale_return'].includes(d.type) ? `
-                        <div class="ta-invoice-pricing-choice rounded-xl border border-cyan-400 bg-gradient-to-l from-sky-100 via-cyan-50 to-white px-2.5 py-2 shadow-sm">
-                            <label for="invoicePricingTier" class="block text-xs font-black text-cyan-950 mb-1"><i class="fas fa-coins ml-1 text-sky-700"></i> طريقة التسعير لهذه الفاتورة</label>
-                            <select id="invoicePricingTier" aria-label="تغيير طريقة التسعير داخل الفاتورة" onchange="InvoiceController.changeInvoicePricingTier(this.value)" class="w-full rounded-lg border-2 border-sky-400 bg-white text-sky-950 font-black px-2 py-2 text-xs shadow-sm">
+                        <div class="ta-invoice-pricing-choice">
+                          <div class="ta-quick-picker" title="اضغط لاختيار طريقة التسعير">
+                            <span class="ta-quick-picker__face"><i class="fas fa-tags" aria-hidden="true"></i><span>${({account:'حسب إعدادات الحساب',wholesale:'سعر الجملة',center:'سعر المركز',consumer:'سعر المستهلك'})[d.priceTierOverride] || 'حسب إعدادات الحساب'}</span></span>
+                            <select id="invoicePricingTier" aria-label="اختيار طريقة تسعير الفاتورة" onchange="InvoiceController.changeInvoicePricingTier(this.value)">
                                 <option value="account" ${!['wholesale','center','consumer'].includes(d.priceTierOverride)?'selected':''}>حسب إعدادات الحساب</option>
                                 <option value="wholesale" ${d.priceTierOverride==='wholesale'?'selected':''}>سعر الجملة</option>
                                 <option value="center" ${d.priceTierOverride==='center'?'selected':''}>سعر المركز</option>
                                 <option value="consumer" ${d.priceTierOverride==='consumer'?'selected':''}>سعر المستهلك</option>
                             </select>
-                        </div>` : ''}
-                        <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-                            <button type="button" onclick="InvoiceController.changePaymentMethod('cash')" class="py-2 rounded-lg transition ${d.paymentMethod === 'cash' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600'}">
-                                <i class="fas fa-money-bill-wave ml-1"></i> نقدي
-                            </button>
-                            <button type="button" onclick="InvoiceController.changePaymentMethod('credit')" class="py-2 rounded-lg transition ${d.paymentMethod === 'credit' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600'}">
-                                <i class="fas fa-clock ml-1"></i> آجل (ذمم)
-                            </button>
-                            <button type="button" onclick="InvoiceController.changePaymentMethod('partial')" class="py-2 rounded-lg transition ${d.paymentMethod === 'partial' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600'}">
-                                <i class="fas fa-sliders ml-1"></i> دفع جزئي
-                            </button>
+                          </div>
                         </div>
+                      </div>
+                      <button type="button" aria-label="طريقة الدفع؛ اضغط للتبديل نقدي ثم دفعات ثم آجل" title="اضغط للتبديل: نقدي ← دفعات ← آجل" onclick="InvoiceController.cyclePaymentMethod()" class="ta-payment-cycle ta-pay-${d.paymentMethod}">
+                        <span class="ta-payment-method-value"><i class="fas ${d.paymentMethod==='cash'?'fa-money-bill-wave':d.paymentMethod==='partial'?'fa-hand-holding-dollar':'fa-clock'}" aria-hidden="true"></i> طريقة الدفع: ${d.paymentMethod==='cash'?'نقدي':d.paymentMethod==='partial'?'دفعات':'آجل'}</span>
+                        <i class="fas fa-arrow-rotate-right" aria-hidden="true"></i>
+                      </button>
+
+
                     </div>
 
                     <div class="bg-white rounded-2xl border border-slate-200 p-3 mb-3 shadow-xs space-y-2">
@@ -8039,18 +8233,14 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
                         </div>
                     </div>
 
-                    ${this.draftBalanceHTML()}
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <!-- DEFAULT ACTION: Save & Print via Bluetooth Thermal Printer -->
-                        <button type="button" onclick="InvoiceController.saveInvoice(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-2 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fab fa-bluetooth-b text-base"></i>
-                            <span>حفظ وطباعة بلوتوث</span>
-                        </button>
-                        <button type="button" onclick="InvoiceController.saveInvoice(false)" class="bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3 px-2 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fas fa-floppy-disk text-emerald-400"></i>
-                            <span>${d.isEditing ? 'حفظ التعديلات' : 'حفظ الفاتورة'}</span>
-                        </button>
+
+                    <div class="ta-invoice-save-footer" role="group" aria-label="حفظ الفاتورة وأرصدة الحساب">
+                      <div class="ta-footer-balances">${this.footerBalancesHTML()}</div>
+                      <div class="ta-footer-actions">
+                        <button type="button" onclick="InvoiceController.saveInvoice(true)"><i class="fas fa-print"></i> حفظ وطباعة</button>
+                        <button type="button" onclick="InvoiceController.saveInvoice(false)"><i class="fas fa-floppy-disk"></i> ${d.isEditing?'حفظ التعديلات':'حفظ الفاتورة'}</button>
+                      </div>
                     </div>
 
                     ${d.isEditing ? `
@@ -9747,5 +9937,49 @@ html body.ta-3d-v3524 #mainContent .ta-home-section{overflow:visible!important;}
 <script src="static/tiqany-support.js"></script>
 <script src="static/tiqany-ux-3588.js"></script>
 <script src="static/account-statement-period-3589.js"></script>
+
+<script id="ta-invoice-measured-footer-3597">
+/* Measure the rendered footer, not an assumed pixel height. The main invoice scrollport
+   then has enough bottom inset for its final row to pass the fixed footer on any screen. */
+(function () {
+  'use strict';
+  const main = document.getElementById('mainContent');
+  if (!main) return;
+  let footer = null;
+  let footerResizeObserver = null;
+  let pending = false;
+  function updateMeasurement() {
+    pending = false;
+    const current = document.body.classList.contains('ta-invoice-editor-screen')
+      ? main.querySelector('.ta-invoice-save-footer') : null;
+    if (current !== footer) {
+      if (footerResizeObserver) footerResizeObserver.disconnect();
+      footer = current;
+      if (footer && typeof ResizeObserver !== 'undefined') {
+        footerResizeObserver = new ResizeObserver(queueMeasurement);
+        footerResizeObserver.observe(footer);
+      }
+    }
+    const h = footer ? Math.ceil(footer.getBoundingClientRect().height) : 0;
+    const next = h > 0 ? String(h) + 'px' : '';
+    const root = document.documentElement;
+    if (root.style.getPropertyValue('--ta-invoice-footer-height') !== next) {
+      if (next) root.style.setProperty('--ta-invoice-footer-height', next);
+      else root.style.removeProperty('--ta-invoice-footer-height');
+    }
+  }
+  function queueMeasurement() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(updateMeasurement);
+  }
+  // InvoiceController replaces main.innerHTML as rows and options change.
+  new MutationObserver(queueMeasurement).observe(main, {childList:true});
+  new MutationObserver(queueMeasurement).observe(document.body, {attributes:true,attributeFilter:['class']});
+  window.addEventListener('resize', queueMeasurement, {passive:true});
+  window.addEventListener('orientationchange', queueMeasurement, {passive:true});
+  queueMeasurement();
+})();
+</script>
 </body>
 </html>
