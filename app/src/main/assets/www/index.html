@@ -1250,6 +1250,14 @@ body:has(#mainContent .ta-voucher-save-footer) #mainContent{padding-bottom:calc(
 .ta-voucher-footer-actions button{min-height:39px;border-radius:12px;padding:7px 5px;font-size:14px;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;gap:7px}
 .ta-voucher-save-action{background:#047857;border:1px solid #065f46}.ta-voucher-cancel-action{background:#e11d48;border:1px solid #be123c}
 </style>
+<style id="ta-explicit-save-cancel-background-35106">
+/* 3.5.106: Change only action backgrounds; inherit original label/icon colors. */
+#warehouseTransferPanel #transferSaveButton{background:#047857!important;background-color:#047857!important;background-image:none!important}
+#warehouseTransferPanel .ta-transfer-form-actions .ta-transfer-cancel-button{background:#dc2626!important;background-color:#dc2626!important;background-image:none!important}
+#warehouseTransferPanel #transferCancelEditButton{background:#dc2626!important;background-color:#dc2626!important;background-image:none!important}
+.ta-voucher-save-footer .ta-voucher-save-action{background:#047857!important;background-color:#047857!important;background-image:none!important}
+.ta-voucher-save-footer .ta-voucher-cancel-action,.ta-voucher-cancel-button{background:#dc2626!important;background-color:#dc2626!important;background-image:none!important}
+</style>
 </head>
 <body class="ta-premium-ui ta-3d-v3524 bg-slate-100 text-slate-800 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
 
@@ -1720,6 +1728,8 @@ body:has(#mainContent .ta-voucher-save-footer) #mainContent{padding-bottom:calc(
                     await this.putBatch([{id:'profile:'+id,data:next,updatedAt:new Date().toISOString()},{id:'profile_registry',data:updated}]);
                     this.registry=updated;
                     await this.activate(id);
+                    if(this.activeId!==id || this.currentName()!==name)
+                        UI.toast('تعذر فتح الشركة الجديدة باسمها الصحيح؛ تحقق من قائمة الشركات قبل أي عملية','error');
                 }catch(e){UI.toast('تعذّر إنشاء حساب مستقل: '+e.message,'error');}
             },
             async requestSwitch(id) {
@@ -1754,7 +1764,10 @@ body:has(#mainContent .ta-voucher-save-footer) #mainContent{padding-bottom:calc(
                 try {
                     const target=await this.getRecord('profile:'+id);
                     if(!target?.data) throw Error('لا توجد بيانات محفوظة للشركة');
-                    const oldId=this.activeId,oldState=this.cloneState(),newState=target.data;
+                    const oldId=this.activeId,oldState=this.cloneState(),newState=JSON.parse(JSON.stringify(target.data));
+                    const selected=this.registry.profiles.find(p=>p.id===id);
+                    if(!newState.settings || !selected?.name)throw Error('تعذر قراءة اسم الشركة المختارة');
+                    newState.settings.companyName=String(selected.name).trim();
                     const commonLicense=JSON.parse(JSON.stringify(State.license));
                     const registry={...this.registry,activeId:id};
                     const date=new Date().toISOString();
@@ -5043,15 +5056,15 @@ body:has(#mainContent .ta-voucher-save-footer) #mainContent{padding-bottom:calc(
                     <div class="bg-white border border-blue-200 rounded-2xl p-3 mb-3" dir="rtl">
                        <h3 class="font-black text-slate-900 mb-2">فترة كشف الحساب</h3>
                        <div class="grid grid-cols-2 gap-2 mb-2">
-                           <label class="text-xs font-extrabold">من تاريخ<input id="statementFrom" type="date" value="${AppEscape.text(dateFrom)}" onchange="AccountStatementPeriod.update('${acc.id}')" class="w-full border p-2 rounded-lg bg-white mt-1"/></label>
-                           <label class="text-xs font-extrabold">إلى تاريخ<input id="statementTo" type="date" value="${AppEscape.text(dateTo)}" onchange="AccountStatementPeriod.update('${acc.id}')" class="w-full border p-2 rounded-lg bg-white mt-1"/></label>
+                           <label class="text-xs font-extrabold">من تاريخ<input id="statementFrom" type="date" value="${AppEscape.text(dateFrom)}" onchange="AccountStatementPeriod.update('${acc.id}')" oninput="AccountStatementPeriod.queueUpdate('${acc.id}')" class="w-full border p-2 rounded-lg bg-white mt-1"/></label>
+                           <label class="text-xs font-extrabold">إلى تاريخ<input id="statementTo" type="date" value="${AppEscape.text(dateTo)}" onchange="AccountStatementPeriod.update('${acc.id}')" oninput="AccountStatementPeriod.queueUpdate('${acc.id}')" class="w-full border p-2 rounded-lg bg-white mt-1"/></label>
                        </div>
                        <p class="text-[11px] text-slate-600 mb-2">اترك التاريخ فارغاً لعرض كامل الفترة. الرصيد المدور هو جميع حركات ما قبل تاريخ البداية.</p>
                        <div class="grid grid-cols-2 gap-2 text-xs mb-2">
                          <div class="bg-sky-50 p-2 rounded-xl border border-sky-200"><b>الرصيد المدور ل.س</b><div class="font-bold">${AccountStatementPeriod.fmt(st.opening.SYP,'SYP')}</div></div>
                          <div class="bg-amber-50 p-2 rounded-xl border border-amber-200"><b>الرصيد المدور USD</b><div class="font-bold">${AccountStatementPeriod.fmt(st.opening.USD,'USD')}</div></div>
                        </div>
-                       <button type="button" class="w-full bg-rose-700 text-white font-black rounded-xl p-3" onclick="AccountStatementPeriod.sharePdf('${acc.id}')"><i class="fas fa-file-pdf ml-2"></i>إنشاء ومشاركة كشف حساب PDF</button>
+                       <button type="button" class="w-full bg-green-700 hover:bg-green-800 text-white font-black rounded-xl p-3" onclick="AccountStatementPeriod.sharePdf('${acc.id}')"><i class="fas fa-file-pdf ml-2"></i>إنشاء ومشاركة كشف حساب PDF</button>
                     </div>
                     <div class="bg-slate-900 text-white p-4 rounded-2xl mb-3 shadow-md">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
