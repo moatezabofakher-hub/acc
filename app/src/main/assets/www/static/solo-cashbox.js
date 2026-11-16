@@ -33,6 +33,7 @@ const SoloCashbox = {
       if(amount>0)add({id:e.id,date:e.date||'',ref:'مصروف',party:e.category||'مصاريف',
         desc:e.note||'مصروف نقدي',currency:e.currency,inflow:0,outflow:amount});
     }
+    for(const m of CapitalLedger.cashMovements())add(m);
     movements.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     return {sypCash,usdCash,movements};
   }

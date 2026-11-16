@@ -78,12 +78,14 @@
     <title>المحاسب التقني</title>
     <!-- Tailwind CSS -->
     <link rel="stylesheet" href="static/tailwind.css">
+    <link rel="stylesheet" href="static/capital-ledger.css">
     <!-- Google Fonts: Cairo -->
     <!-- Local Android font fallback, no CDN dependency -->
     <!-- Font Awesome Icons -->
     <script defer src="static/icons.js"></script>
     <script defer src="static/account-balance-summary.js"></script>
     <script defer src="static/purchase-cost-engine.js"></script><script defer src="static/invoice-dual-balances.js"></script><script defer src="static/draft-invoice-balance-preview.js"></script>
+    <script defer src="static/capital-ledger.js"></script>
     <script defer src="static/solo-cashbox.js"></script>
     <script defer src="static/stock-notifications.js"></script>
     <style>
@@ -1470,6 +1472,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
             warehouses: [{ id: 'wh_main', name: 'المستودع الرئيسي' }],
             transfers: [],
             expenses: [],
+            capitalMovements: [],
             alertCenter: { entries: [], stockLevels: null }
         };
 
@@ -1588,6 +1591,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                             }
                             State.transfers = Array.isArray(d.transfers) ? d.transfers : [];
                             State.expenses = SoloSanitize.documents(d.expenses);
+                            State.capitalMovements = Array.isArray(d.capitalMovements) ? d.capitalMovements : [];
                             State.alertCenter = SoloSanitize.notifications(d.alertCenter);
                             if (!State.warehouses.some(w => w.id === State.settings.selectedWarehouseId))
                                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1628,6 +1632,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                             warehouses: State.warehouses,
                             transfers: State.transfers,
                             expenses: State.expenses,
+                            capitalMovements: State.capitalMovements,
                             alertCenter: State.alertCenter
                         }
                     });
@@ -1656,6 +1661,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                 State.warehouses = [{ id: 'wh_main', name: 'المستودع الرئيسي' }];
                 State.transfers = [];
                 State.expenses = [];
+                State.capitalMovements = [];
                 State.alertCenter = {entries:[],stockLevels:null};
                 State.settings.selectedWarehouseId = 'wh_main';
                 await this.saveState();
@@ -1832,7 +1838,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                         {id:'profile_registry',data:registry}
                     ]);
                     this.registry=registry;this.activeId=id;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(newState[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(newState[key]):newState[key])??DEFAULT_PROFILE[key]));
                     State.license=commonLicense;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -1914,7 +1920,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                         {id:'profile_registry',data:updated}
                     ],[profileId]);
                     this.registry=updated;this.activeId=newId;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','fieldSync','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','fieldSync','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify(newData[key]??DEFAULT_PROFILE[key]));
                     State.license=license;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -2091,8 +2097,8 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                 const license=State.license;
                 this._preRestoreProtection=JSON.parse(JSON.stringify(State.settings?.appProtection||{}));
                 const fresh=this.newState(d.settings?.companyName||this.currentName());
-                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','alertCenter'])
-                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]));
+                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','alertCenter'])
+                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(key==='capitalMovements'?[]:null)));
                 State.license=license; // Activation cannot be imported from another device/business.
                 // Keep the approved account's security identity on this device.
                 // On a fresh device, carry forward the authenticated backup PIN but
@@ -2727,6 +2733,11 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                         desc: exp.note || 'مصروف نقدي', currency: exp.currency,
                         inflow: 0, outflow: amt
                     });
+                }
+                for (const m of CapitalLedger.cashMovements()) {
+                    if(m.currency==='SYP')sypCash=this.round(sypCash+m.inflow-m.outflow,'SYP');
+                    else usdCash=this.round(usdCash+m.inflow-m.outflow,'USD');
+                    movements.push(m);
                 }
                 movements.sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
                 return { sypCash, usdCash, movements };
@@ -5568,6 +5579,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                             ${['custom','range'].includes(period)?`<div class="grid grid-cols-2 gap-2"><label>من<input type="date" class="w-full border rounded p-2" value="${AppEscape.text(selectedDate)}" onchange="AppNav.navigate('reports',{tab:'cashbox',period:'${period}',date:this.value,end:'${AppEscape.text(endDate)}'},true)"></label>${period==='range'?`<label>إلى<input type="date" class="w-full border rounded p-2" value="${AppEscape.text(endDate)}" onchange="AppNav.navigate('reports',{tab:'cashbox',period:'range',date:'${AppEscape.text(selectedDate)}',end:this.value},true)"></label>`:''}</div>`:''}
                             <p class="text-[11px] text-slate-500">الرصيد الحالي للصندوق من كل الحركات، أما السجل أدناه فيُفلتر حسب الفترة.</p>
                         </div>
+                        ${CapitalLedger.card()}
                         <div class="grid grid-cols-2 gap-2.5 mb-3">
                             <div class="bg-emerald-700 text-white p-3.5 rounded-2xl"><span class="text-xs opacity-80 block">صافي صندوق الليرة السورية</span><span class="font-extrabold text-base sm:text-lg">${Accounting.format(cash.sypCash, 'SYP')}</span></div>
                             <div class="bg-slate-900 text-white p-3.5 rounded-2xl"><span class="text-xs opacity-80 block">صافي صندوق الدولار الأمريكي</span><span class="font-extrabold text-base sm:text-lg text-amber-300">${Accounting.format(cash.usdCash, 'USD')}</span></div>
@@ -9329,6 +9341,7 @@ body.ta-transfer-editor-open #mainContent{padding-bottom:calc(var(--ta-transfer-
                     <label class="block text-xs font-bold text-slate-700">تكرار النسخ الاحتياطي</label>
                     <select aria-label="تكرار النسخ الاحتياطي" class="w-full border border-slate-300 rounded-lg p-2.5 font-bold text-xs bg-white"
                         ${status.supported?'':'disabled'} onchange="BackupController.setHours('${kind}', this.value)">
+                        <option value="2" ${hours===2?'selected':''}>كل ساعتين</option>
                         <option value="6" ${hours===6?'selected':''}>كل 6 ساعات</option>
                         <option value="12" ${hours===12?'selected':''}>كل 12 ساعة</option>
                         <option value="24" ${hours===24?'selected':''}>كل 24 ساعة</option>
