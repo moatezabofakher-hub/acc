@@ -27,11 +27,28 @@ const State={
   accounts:[{id:'c',name:'عميل'}]
 };
 const ctx={State,console,Date,Map};vm.createContext(ctx);
+// The installed app loads capital-ledger.js before solo-cashbox.js. Mirror the same
+// dependency order in this isolated VM, otherwise cashbox.summary() throws a
+// ReferenceError even though the deployed index.html includes both scripts.
+assert(html.indexOf('static/capital-ledger.js') < html.indexOf('static/solo-cashbox.js'),
+  'Capital ledger must be loaded before the cashbox');
+vm.runInContext(readFile('capital-ledger.js'),ctx);
+assert.equal(typeof ctx.CapitalLedger?.cashMovements,'function');
 vm.runInContext(readFile('solo-cashbox.js')+'\n globalThis.Box=SoloCashbox;',ctx);
 const cash=ctx.Box.summary();
 assert.equal(cash.usdCash,13);
 assert.equal(cash.sypCash,-2000);
 assert.equal(cash.movements.length,4);
+// Capital injections and withdrawals must affect only office cash, not debts or P&L.
+State.capitalMovements=[
+  {id:'capital-1',direction:'receive',currency:'USD',amount:40,date:'2026-11-14'},
+  {id:'capital-2',direction:'pay',currency:'USD',amount:7,date:'2026-11-15'}
+];
+const withCapital=ctx.Box.summary();
+assert.equal(withCapital.usdCash,46);
+assert.equal(withCapital.sypCash,-2000);
+assert.equal(withCapital.movements.length,6);
+State.capitalMovements=[];
 // The stock-only alert system must ignore old imported field-agent alerts.
 State.alertCenter={entries:[{id:'agent:1',type:'agent',read:false}],stockLevels:{'wh_main::itm':3}};
 State.warehouses=[{id:'wh_main',name:'المستودع الرئيسي'}];
