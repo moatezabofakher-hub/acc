@@ -2918,6 +2918,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
             navigate(screen, params = {}, replace = false) {
                 const executeNavigation = () => {
+                    if(screen==='reports')window.TiqanyScroll144?.resetShareholders();
                     const before=this.current();
                     const enteringDifferentView=before.screen!==screen ||
                         String(before.params?.id||'')!==String(params?.id||'') ||
@@ -10515,5 +10516,6 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 <script src="static/company-lifecycle-128.js"></script>
 <script src="static/ta-settings-order-security-138.js"></script>
 <script defer src="static/ta-currency-exchange-core-142.js"></script><script defer src="static/ta-currency-exchange-ui-142.js"></script>
+<script src="static/ta-scroll-144.js"></script>
 </body>
 </html>

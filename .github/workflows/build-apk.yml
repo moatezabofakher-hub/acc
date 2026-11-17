@@ -3,7 +3,7 @@ name: Tiqany Acc - Solo Signed Release
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feat/currency-exchange-142', 'fix/solo-startup-143']
+    branches: [main, 'fix/scroll-behavior-144']
 
 permissions:
   contents: read
@@ -31,6 +31,10 @@ jobs:
           gradle-version: '8.9'
       - name: Validate all shipped JavaScript before release
         run: node --test tests/release143-javascript-parse.test.cjs
+      - name: Validate all application scripts
+        run: node --test tests/release144-javascript-parse.test.cjs
+      - name: Verify shareholder position and settings alignment
+        run: node --test tests/release144-scroll-behavior.test.cjs
       - name: Static release audit
         run: python3 scripts/release_audit.py solo
       - name: Run project tests
@@ -102,14 +106,14 @@ jobs:
             exit 1
           fi
           mkdir -p output
-          cp "$apk" "output/Tiqany-Acc-Solo-3.5.143-RELEASE.apk"
-          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.143-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.143-RELEASE.apk.sha256")
+          cp "$apk" "output/Tiqany-Acc-Solo-3.5.144-RELEASE.apk"
+          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.144-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.144-RELEASE.apk.sha256")
       - name: Upload signed app APK and checksum
         uses: actions/upload-artifact@v4
         with:
-          name: Tiqany-Acc-Solo-3.5.143-RELEASE
+          name: Tiqany-Acc-Solo-3.5.144-RELEASE
           path: |
-            output/Tiqany-Acc-Solo-3.5.143-RELEASE.apk
-            output/Tiqany-Acc-Solo-3.5.143-RELEASE.apk.sha256
+            output/Tiqany-Acc-Solo-3.5.144-RELEASE.apk
+            output/Tiqany-Acc-Solo-3.5.144-RELEASE.apk.sha256
           if-no-files-found: error
           retention-days: 30
