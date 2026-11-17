@@ -1494,6 +1494,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             capitalMovements: [],
             shareholderOwners: [],
             shareholderMovements: [],
+            currencyExchanges: [],
             alertCenter: { entries: [], stockLevels: null }
         };
 
@@ -1615,6 +1616,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             State.capitalMovements = Array.isArray(d.capitalMovements) ? d.capitalMovements : [];
                             State.shareholderOwners = Array.isArray(d.shareholderOwners) ? d.shareholderOwners : [];
                             State.shareholderMovements = Array.isArray(d.shareholderMovements) ? d.shareholderMovements : [];
+                            State.currencyExchanges = Array.isArray(d.currencyExchanges) ? d.currencyExchanges : [];
                             State.alertCenter = SoloSanitize.notifications(d.alertCenter);
                             if (!State.warehouses.some(w => w.id === State.settings.selectedWarehouseId))
                                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1658,6 +1660,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             capitalMovements: State.capitalMovements,
                             shareholderOwners: State.shareholderOwners,
                             shareholderMovements: State.shareholderMovements,
+                            currencyExchanges: State.currencyExchanges,
                             alertCenter: State.alertCenter
                         }
                     });
@@ -1689,6 +1692,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 State.capitalMovements = [];
                 State.shareholderOwners = [];
                 State.shareholderMovements = [];
+                State.currencyExchanges = [];
                 State.settings.shareholderDistribution = {values:{}};
                 State.alertCenter = {entries:[],stockLevels:null};
                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1884,7 +1888,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:registry}
                     ]);
                     this.registry=registry;this.activeId=id;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(newState[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(newState[key]):newState[key])??DEFAULT_PROFILE[key]));
                     State.license=commonLicense;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -1966,7 +1970,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:updated}
                     ],[profileId]);
                     this.registry=updated;this.activeId=newId;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','fieldSync','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','fieldSync','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify(newData[key]??DEFAULT_PROFILE[key]));
                     State.license=license;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -2144,8 +2148,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const license=State.license;
                 this._preRestoreProtection=JSON.parse(JSON.stringify(State.settings?.appProtection||{}));
                 const fresh=this.newState(d.settings?.companyName||this.currentName());
-                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','alertCenter'])
-                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(['capitalMovements','shareholderOwners','shareholderMovements'].includes(key)?[]:null)));
+                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','alertCenter'])
+                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(['capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges'].includes(key)?[]:null)));
                 State.license=license; // Activation cannot be imported from another device/business.
                 // Keep the approved account's security identity on this device.
                 // On a fresh device, carry forward the authenticated backup PIN but
@@ -5646,7 +5650,12 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         ? Number(exp.exchangeRate) : (Number(State.settings.exchangeRate) || 1);
                     return total + (exp.currency === 'USD' ? amount : amount / originalRate);
                 }, 0);
-                const netProfitUsd = estimatedProfitUsd - expenseTotalUsd;
+                const exchangeProfitSyp = typeof TiqanyCurrencyExchangeCore!=='undefined'
+                   ?[...TiqanyCurrencyExchangeCore.analyze(State.currencyExchanges||[]).byId.values()]
+                     .filter(e=>e.gainSyp!==null && TimeFilter.matches(e.date,period,selectedDate,endDate) && (agentId==='all'||agentId===(e.agentId||'office')))
+                     .reduce((sum,e)=>sum+e.gainSyp,0):0;
+                const netProfitUsd = estimatedProfitUsd - expenseTotalUsd
+                  + exchangeProfitSyp/(Number(State.settings.exchangeRate)||1);
                 const expenseByCategory = {};
                 reportExpenses.forEach(exp => {
                     const category = exp.category || 'أخرى';
@@ -5675,7 +5684,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             ${['custom','range'].includes(period)?`<div class="grid grid-cols-2 gap-2"><label>من<input type="date" class="w-full border rounded p-2" value="${AppEscape.text(selectedDate)}" onchange="AppNav.navigate('reports',{tab:'cashbox',period:'${period}',date:this.value,end:'${AppEscape.text(endDate)}'},true)"></label>${period==='range'?`<label>إلى<input type="date" class="w-full border rounded p-2" value="${AppEscape.text(endDate)}" onchange="AppNav.navigate('reports',{tab:'cashbox',period:'range',date:'${AppEscape.text(selectedDate)}',end:this.value},true)"></label>`:''}</div>`:''}
                             <p class="text-[11px] text-slate-500">الرصيد الحالي للصندوق من كل الحركات، أما السجل أدناه فيُفلتر حسب الفترة.</p>
                         </div>
-                        ${CapitalLedger.card()}
+                        
                         <div class="grid grid-cols-2 gap-2.5 mb-3">
                             <div class="bg-emerald-700 text-white p-3.5 rounded-2xl"><span class="text-xs opacity-80 block">صافي صندوق الليرة السورية</span><span class="font-extrabold text-base sm:text-lg">${Accounting.format(cash.sypCash, 'SYP')}</span></div>
                             <div class="bg-slate-900 text-white p-3.5 rounded-2xl"><span class="text-xs opacity-80 block">صافي صندوق الدولار الأمريكي</span><span class="font-extrabold text-base sm:text-lg text-amber-300">${Accounting.format(cash.usdCash, 'USD')}</span></div>
@@ -10505,5 +10514,6 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 <script defer src="static/ta-date-view-35107.js"></script>
 <script src="static/company-lifecycle-128.js"></script>
 <script src="static/ta-settings-order-security-138.js"></script>
+<script defer src="static/ta-currency-exchange-core-142.js"></script><script defer src="static/ta-currency-exchange-ui-142.js"></script>
 </body>
 </html>
