@@ -1434,7 +1434,8 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
 
         const State = {
             settings: {
-                companyName: 'مؤسسة الرائد التجارية',
+                companyName: '',
+                companySetupCompleted: false,
                 companyPhone: '',
                 companyAddress: '',
                 companyLogo: '',
@@ -2059,7 +2060,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                     UI.openModal(`<div class="space-y-3 text-right"><h3 class="font-black text-base text-rose-800"><i class="fas fa-triangle-exclamation ml-1"></i> نسخة من شركة مختلفة</h3><p class="text-xs leading-relaxed bg-rose-50 p-3 rounded-xl text-rose-800">هذه النسخة تخص ${foreign}، وليست الحساب المفتوح: ${AppEscape.text(this.currentName())}. الاستعادة ستستبدل مواد وفواتير وحسابات وإعدادات الشركة الحالية. سيتم حفظ نقطة استرجاع داخلية أولاً.</p><label class="block text-xs font-bold">كلمة سر الشركة المالكة للنسخة<input id="foreignBackupPin" type="password" inputmode="numeric" autocomplete="off" class="mt-2 w-full p-3 border rounded-xl" placeholder="كلمة السر"></label><button onclick="ProfileManager.confirmForeignRestore()" class="w-full bg-rose-700 text-white py-3 rounded-xl font-black">تحقق واستعد بعد التحذير</button><button onclick="ProfileManager.pendingImport=null;UI.forceCloseModal()" class="w-full bg-slate-100 py-2 rounded-xl font-bold">إلغاء</button></div>`);
                     return false;
                 }
-                await this.applyRestore(d);return true;
+                await this.applyRestore(d,parsed);return true;
             },
             cancelBackupSourcePin(){this.pendingBackupAuthorization=null;UI.forceCloseModal();},
             async confirmBackupSourcePin(){
@@ -2094,27 +2095,29 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                     if (currentCfg.fingerprintEnabled && window.NativeSecurity && typeof window.NativeSecurity.authenticate === 'function') {
                         ProtectionController.requestPin('التحقق من ملكية الشركة الحالية قبل استبدال بياناتها', async () => {
                             const approved = this.authorizedImport?.d;
-                            if (approved) await this.applyRestore(approved);
+                            if (approved) await this.applyRestore(approved,this.authorizedImport?.parsed);
                         });
                         return;
                     }
                     UI.openModal(`<div class="space-y-3 text-right"><p class="text-xs bg-amber-50 p-3 rounded-xl text-amber-800">تم التحقق من كلمة سر الشركة المصدر. أكّد الآن بكلمة سر الشركة الحالية قبل استبدال بياناتها.</p><input id="currentBackupPin" type="password" inputmode="numeric" class="w-full p-3 border rounded-xl" placeholder="كلمة سر الشركة الحالية"><button onclick="ProfileManager.confirmCurrentRestore()" class="w-full bg-rose-700 text-white rounded-xl p-3 font-black">تأكيد استعادة النسخة</button></div>`);return;
                 }
-                await this.applyRestore(info.d);
+                await this.applyRestore(info.d,info.parsed);
             },
             async confirmCurrentRestore() {
                 const pin=document.getElementById('currentBackupPin')?.value||'';
                 if(!(await ProtectionController.verifyPin(pin)))return UI.toast('كلمة سر الشركة الحالية غير صحيحة','error');
                 const data=this.authorizedImport?.d;
-                if(data)await this.applyRestore(data);
+                if(data)await this.applyRestore(data,this.authorizedImport?.parsed);
             },
-            async applyRestore(d) {
+            async applyRestore(d, sourceBackup=null) {
                 const gate=this.restoreAuthorization;
                 if(!gate||gate.data!==d||Date.now()>gate.expires){
                     UI.toast('لا يمكن استعادة البيانات دون التحقق بالبصمة أو كلمة السر','error');return false;
                 }
                 this.restoreAuthorization=null; // one-time approval; never replay a protected restore
                 if(AppNav.isDirty||AppNav.activeOperationGuard)return UI.toast('احفظ أي تعديلات قبل الاستعادة','warn');
+                try { CompanyLifecycle.validateConflictJournal(sourceBackup); }
+                catch(e) { UI.toast('تعذر استعادة سجل التعارض: '+e.message,'error');return false; }
                 // Commit a local pre-restore checkpoint BEFORE mutating State.
                 await this.makeCheckpoint('before-import');
                 const license=State.license;
@@ -2133,6 +2136,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                     State.settings.appProtection={...State.settings.appProtection,fingerprintEnabled:false,fingerprintCredentialId:''};
                 }
                 await StorageEngine.saveState();
+                await CompanyLifecycle.restoreConflictJournal(sourceBackup);
                 this.pendingImport=null;this.authorizedImport=null;this._preRestoreProtection=null;
                 UI.forceCloseModal();SettingsController.closeAllSections();
                 AppNav.navigate('dashboard',{},true);UI.toast('تمت استعادة البيانات بعد إنشاء نقطة استرجاع محلية','success');
@@ -3739,7 +3743,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
 
                 ctx.font = `900 ${fCompany}px Cairo, sans-serif`;
                 ctx.textAlign = 'center';
-                const compLines = wrapTextLines(State.settings.companyName || 'مؤسسة الرائد التجارية', `900 ${fCompany}px Cairo, sans-serif`, widthDots - pad * 2);
+                const compLines = wrapTextLines(State.settings.companyName || '', `900 ${fCompany}px Cairo, sans-serif`, widthDots - pad * 2);
                 for (const line of compLines) {
                     ctx.fillText(line, widthDots / 2, y);
                     y += fCompany + 8;
@@ -4979,7 +4983,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                         <!-- 1. Header: Uploaded Logo (Only if added by user), Company Name, Phone -->
                         <div class="text-center mb-1">
                             ${State.settings.companyLogo ? `<img src="${State.settings.companyLogo}" class="h-24 max-w-[180px] mx-auto mb-2 object-contain" alt="Logo">` : ''}
-                            <h2 class="font-black text-2xl sm:text-3xl tracking-tight text-black">${State.settings.companyName || 'مؤسسة الرائد التجارية'}</h2>
+                            <h2 class="font-black text-2xl sm:text-3xl tracking-tight text-black">${State.settings.companyName || ''}</h2>
                             ${State.settings.companyPhone ? `<p class="font-bold text-base sm:text-lg text-black mt-0.5" dir="ltr">${State.settings.companyPhone}</p>` : ''}
                             ${State.settings.companyAddress ? `<p class="font-bold text-xs sm:text-sm text-black mt-0.5">${State.settings.companyAddress}</p>` : ''}
                         </div>
@@ -9725,7 +9729,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
             },
 
             async savePrintHeaderModal() {
-                State.settings.companyName = document.getElementById('modalCompanyName')?.value.trim() || 'مؤسسة الرائد التجارية';
+                State.settings.companyName = document.getElementById('modalCompanyName')?.value.trim() || '';
                 State.settings.companyPhone = document.getElementById('modalCompanyPhone')?.value.trim() || '';
                 State.settings.footerNote = document.getElementById('modalFooterNote')?.value.trim() || '';
                 await StorageEngine.saveState();
@@ -9735,7 +9739,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
             },
 
             async saveSettings() {
-                State.settings.companyName = document.getElementById('setCompanyName')?.value.trim() || 'مؤسسة الرائد التجارية';
+                State.settings.companyName = document.getElementById('setCompanyName')?.value.trim() || '';
                 State.settings.companyPhone = document.getElementById('setCompanyPhone')?.value.trim() || '';
                 State.settings.companyAddress = document.getElementById('setCompanyAddress')?.value.trim() || '';
                 State.settings.footerNote = document.getElementById('setFooterNote')?.value.trim() || '';
@@ -9749,6 +9753,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
 
             exportBackup() {
                 const payload=ProfileManager.backupPayload();
+                payload.peerConflictJournal=await CompanyLifecycle.conflictJournal();
                 const name=ProfileManager.exportName();
                 const content=JSON.stringify(payload,null,2);
                 if(window.AndroidFiles && typeof window.AndroidFiles.saveBackup==='function') {
@@ -9779,7 +9784,7 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                     'أدخل رمز الحماية للسماح بتصفير قاعدة البيانات',
                     () => UI.showDeleteConfirm(
                         'تصفير شامل للنظام',
-                        'سيتم مسح جميع الفواتير والمواد والحسابات والسندات والمستودعات والمناقلات والمصاريف نهائياً. احفظ نسخة احتياطية قبل المتابعة.',
+                        'سيتم مسح كافة بيانات الشركات والفواتير والمستودعات والأرشيف وسجل التعارض النشط والمحسوم نهائياً من قاعدة البيانات المحلية. احفظ نسخة JSON خارج التطبيق قبل المتابعة.',
                         async () => {
                             // Recheck that a PIN still exists before the irreversible action.
                             if (!State.settings.appProtection?.pinHash) {
@@ -10301,12 +10306,14 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
                 history.replaceState({ appGuard: true, depth: 1 }, '');
                 history.pushState({ appGuard: true, depth: 1 }, '');
             } catch (e) {}
-            // Initialize stock depletion notifications.
-            StockNotifications.bootstrap();
-            BackupController.stageLatest(); // Stage existing IndexedDB data after first launch.
+            if(!CompanyLifecycle.needsSetup()){
+                StockNotifications.bootstrap();
+                BackupController.stageLatest();
+            }
             AppNav.renderCurrent();
             ProtectionController.showAppLock();
             ProtectionController.lockOnReturn();
+            CompanyLifecycle.showIfRequired();
         };
         // Scanner stays open and batches all invoice barcodes until pressing ×.
         window.__nativeBarcodeBatchResult = function (codes) {
@@ -10431,5 +10438,6 @@ button.ta-profile-delete-button:focus-visible{outline:3px solid #0c4a6e!importan
 })();
 </script>
 <script defer src="static/ta-date-view-35107.js"></script>
+<script src="static/company-lifecycle-128.js"></script>
 </body>
 </html>
