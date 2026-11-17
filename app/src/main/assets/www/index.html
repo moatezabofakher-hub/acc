@@ -2982,7 +2982,9 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const dlg = document.getElementById('dialogContainer');
                 if (!dlg.classList.contains('hidden')) {
                     const isExitDialog = dlg.getAttribute('data-dialog-type') === 'exit';
-                    if (isExitDialog) {
+                    // Only the unsaved-changes dialog requires a deliberate choice.
+                    // Back on ordinary confirmations has the same effect as Cancel/X.
+                    if (isExitDialog || dlg.getAttribute('data-dialog-type') !== 'unsaved') {
                         dlg.classList.add('hidden');
                         dlg.removeAttribute('data-dialog-type');
                         return;
