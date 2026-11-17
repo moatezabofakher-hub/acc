@@ -85,6 +85,8 @@
     <script defer src="static/account-balance-summary.js"></script>
     <script defer src="static/purchase-cost-engine.js"></script><script defer src="static/invoice-dual-balances.js"></script><script defer src="static/draft-invoice-balance-preview.js"></script>
     <script defer src="static/capital-ledger.js"></script>
+    <script defer src="static/shareholders-integrated-133.js"></script>
+    <link rel="stylesheet" href="static/shareholders-integrated-133.css">
     <script defer src="static/solo-cashbox.js"></script>
     <script defer src="static/stock-notifications.js"></script>
     <style>
@@ -1490,6 +1492,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             transfers: [],
             expenses: [],
             capitalMovements: [],
+            shareholderOwners: [],
+            shareholderMovements: [],
             alertCenter: { entries: [], stockLevels: null }
         };
 
@@ -1609,6 +1613,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             State.transfers = Array.isArray(d.transfers) ? d.transfers : [];
                             State.expenses = SoloSanitize.documents(d.expenses);
                             State.capitalMovements = Array.isArray(d.capitalMovements) ? d.capitalMovements : [];
+                            State.shareholderOwners = Array.isArray(d.shareholderOwners) ? d.shareholderOwners : [];
+                            State.shareholderMovements = Array.isArray(d.shareholderMovements) ? d.shareholderMovements : [];
                             State.alertCenter = SoloSanitize.notifications(d.alertCenter);
                             if (!State.warehouses.some(w => w.id === State.settings.selectedWarehouseId))
                                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1650,6 +1656,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             transfers: State.transfers,
                             expenses: State.expenses,
                             capitalMovements: State.capitalMovements,
+                            shareholderOwners: State.shareholderOwners,
+                            shareholderMovements: State.shareholderMovements,
                             alertCenter: State.alertCenter
                         }
                     });
@@ -1679,6 +1687,9 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 State.transfers = [];
                 State.expenses = [];
                 State.capitalMovements = [];
+                State.shareholderOwners = [];
+                State.shareholderMovements = [];
+                State.settings.shareholderDistribution = {values:{}};
                 State.alertCenter = {entries:[],stockLevels:null};
                 State.settings.selectedWarehouseId = 'wh_main';
                 await this.saveState();
@@ -1873,7 +1884,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:registry}
                     ]);
                     this.registry=registry;this.activeId=id;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(newState[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(newState[key]):newState[key])??DEFAULT_PROFILE[key]));
                     State.license=commonLicense;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -1955,7 +1966,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:updated}
                     ],[profileId]);
                     this.registry=updated;this.activeId=newId;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','fieldSync','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','fieldSync','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify(newData[key]??DEFAULT_PROFILE[key]));
                     State.license=license;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -2133,8 +2144,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const license=State.license;
                 this._preRestoreProtection=JSON.parse(JSON.stringify(State.settings?.appProtection||{}));
                 const fresh=this.newState(d.settings?.companyName||this.currentName());
-                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','alertCenter'])
-                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(key==='capitalMovements'?[]:null)));
+                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','alertCenter'])
+                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(['capitalMovements','shareholderOwners','shareholderMovements'].includes(key)?[]:null)));
                 State.license=license; // Activation cannot be imported from another device/business.
                 // Keep the approved account's security identity on this device.
                 // On a fresh device, carry forward the authenticated backup PIN but
@@ -2771,7 +2782,10 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         inflow: 0, outflow: amt
                     });
                 }
-                for (const m of CapitalLedger.cashMovements()) {
+                for (const m of [
+                    ...CapitalLedger.cashMovements(),
+                    ...(typeof ShareholdersCashMovements==='function'?ShareholdersCashMovements():[])
+                ]) {
                     if(m.currency==='SYP')sypCash=this.round(sypCash+m.inflow-m.outflow,'SYP');
                     else usdCash=this.round(usdCash+m.inflow-m.outflow,'USD');
                     movements.push(m);
