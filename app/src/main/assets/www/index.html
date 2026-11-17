@@ -9825,7 +9825,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 return true;
             },
 
-            exportBackup() {
+            async exportBackup() {
                 const payload=ProfileManager.backupPayload();
                 payload.peerConflictJournal=await CompanyLifecycle.conflictJournal();
                 const name=ProfileManager.exportName();
