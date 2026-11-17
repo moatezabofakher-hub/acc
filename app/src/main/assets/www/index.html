@@ -1298,6 +1298,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
   scroll-padding-bottom:calc(56px + var(--ta-native-bottom-inset,0px))!important;
 }
 </style>
+<script defer src="static/ta-no-outside-dismiss-138.js"></script>
 </head>
 <body class="ta-premium-ui ta-3d-v3524 bg-slate-100 text-slate-800 min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
 
@@ -1390,7 +1391,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
     </nav>
 
     <!-- Global Modals Container -->
-    <div id="modalContainer" onclick="if(event.target === this) UI.requestCloseModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div id="modalContainer" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden flex items-center justify-center p-3 overflow-y-auto">
         <div id="modalBox" class="bg-white rounded-2xl max-w-lg w-full p-4 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto"></div>
     </div>
 
@@ -6554,7 +6555,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 wrapper.setAttribute('role','dialog');
                 wrapper.setAttribute('aria-modal','true');
                 wrapper.setAttribute('aria-label','اختر عملة تسعير الصنف');
-                wrapper.onclick=e=>{if(e.target===wrapper)wrapper.remove();};
+                // Backdrop taps intentionally do nothing; close via Cancel, X or Back.
                 wrapper.innerHTML=`<div class="w-full max-w-xs bg-white rounded-2xl p-4 space-y-3 shadow-xl text-right"><b>اختر عملة تسعير الصنف</b>${allowed.map(c=>`<button type="button" class="block w-full rounded-xl p-3 border bg-emerald-50 font-bold" data-curr="${c}">${c==='USD'?'دولار أمريكي USD':'ليرة سورية SYP'}</button>`).join('')}<button type="button" class="w-full p-2 border rounded-lg" data-close>إلغاء</button></div>`;
                 wrapper.querySelectorAll('[data-curr]').forEach(btn=>btn.onclick=()=>{
                     this.setItemBaseCurrency(btn.dataset.curr);
@@ -9478,7 +9479,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 overlay.setAttribute('role', 'dialog');
                 overlay.setAttribute('aria-modal', 'true');
                 overlay.setAttribute('aria-label', 'اختيار عملة المواد الجديدة');
-                overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+                // No outside-tap dismiss; use Cancel, X, or Back.
                 overlay.innerHTML = `<div class="w-full max-w-xs bg-white rounded-2xl p-4 space-y-3 text-right shadow-xl"><h3 class="font-black text-sm">اختر العملة الافتراضية للمواد الجديدة</h3>${choices.map(c => `<button type="button" data-item-currency="${c}" class="block w-full rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs font-bold p-3">${c === 'USD' ? 'دولار أمريكي (USD)' : 'ليرة سورية (SYP)'}</button>`).join('')}<button type="button" data-cancel class="w-full rounded-lg p-2 border text-xs">إلغاء</button></div>`;
                 overlay.querySelectorAll('[data-item-currency]').forEach(btn => btn.onclick = async () => {
                     const value = btn.dataset.itemCurrency;
