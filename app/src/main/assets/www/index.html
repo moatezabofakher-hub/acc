@@ -2512,10 +2512,10 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             itemSalePrice(item,unit,accountId,tierOverride=null){
                 const acc=State.accounts.find(a=>a.id===accountId);
                 // Per-account explicit pricing always wins. 'settings' (and legacy unspecified) follows the invoice setting.
-                const globalTier=['wholesale','center','consumer'].includes(State.settings.defaultInvoicePriceTier)
+                const globalTier=TiqanyPricing152.validTier(State.settings.defaultInvoicePriceTier)
                     ? State.settings.defaultInvoicePriceTier : 'wholesale';
-                const tier=['wholesale','center','consumer'].includes(tierOverride)?tierOverride:
-                    (['wholesale','center','consumer'].includes(acc?.priceTier)?acc.priceTier:globalTier);
+                const tier=TiqanyPricing152.validTier(tierOverride)?tierOverride:
+                    (TiqanyPricing152.validTier(acc?.priceTier)?acc.priceTier:globalTier);
                 const mode=item?.isBundle?item.bundlePricing?.mode:'manual';
                 if(mode==='component_sum'){
                     const sum=(item.bundleComponents||[]).reduce((value,b)=>{
@@ -3781,7 +3781,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 };
 
                 let logoImg = null;
-                if (State.settings.companyLogo) {
+                if (State.settings.companyLogo && State.settings.taPrintFields?.logo !== false) {
                     logoImg = await new Promise((resolve) => {
                         const img = new Image();
                         img.onload = () => resolve(img);
@@ -3822,18 +3822,18 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
                 ctx.font = `900 ${fCompany}px Cairo, sans-serif`;
                 ctx.textAlign = 'center';
-                const compLines = wrapTextLines(State.settings.companyName || '', `900 ${fCompany}px Cairo, sans-serif`, widthDots - pad * 2);
+                const compLines = wrapTextLines(State.settings.taPrintFields?.company === false ? '' : (State.settings.companyName || ''), `900 ${fCompany}px Cairo, sans-serif`, widthDots - pad * 2);
                 for (const line of compLines) {
                     ctx.fillText(line, widthDots / 2, y);
                     y += fCompany + 8;
                 }
 
-                if (State.settings.companyPhone) {
+                if (State.settings.companyPhone && State.settings.taPrintFields?.phone !== false) {
                     ctx.font = `bold ${fPhone}px Cairo, sans-serif`;
                     ctx.fillText(State.settings.companyPhone, widthDots / 2, y);
                     y += fPhone + 8;
                 }
-                if (State.settings.companyAddress) {
+                if (State.settings.companyAddress && State.settings.taPrintFields?.address !== false) {
                     ctx.font = `bold ${Math.round(fPhone * 0.9)}px Cairo, sans-serif`;
                     ctx.fillText(State.settings.companyAddress, widthDots / 2, y);
                     y += fPhone + 6;
@@ -3859,8 +3859,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 };
 
                 drawMetaRow('رقم الفاتورة', `فاتورة-${inv.number}`);
-                drawMetaRow('التاريخ', this.formatReceiptDate(inv.date));
-                drawMetaRow('الحساب', acc ? acc.name : 'زبون عام');
+                if(State.settings.taPrintFields?.date !== false) drawMetaRow('التاريخ', this.formatReceiptDate(inv.date));
+                if(State.settings.taPrintFields?.account !== false) drawMetaRow('الحساب', acc ? acc.name : 'زبون عام');
 
                 y += 4;
                 drawDoubleSep();
@@ -3873,17 +3873,18 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const xPrice = Math.round(widthDots * 0.23);
                 const xTotal = pad;
                 const maxNameWidth = xName - (widthDots * 0.56);
+                const taPrintGridTop=y-6,taPrintGridRows=[taPrintGridTop];
 
                 ctx.font = `900 ${fTableHead}px Cairo, sans-serif`;
                 ctx.textAlign = 'right';
                 ctx.fillText('#', xIdx, y);
                 ctx.fillText('اسم المادة', xName, y);
                 ctx.textAlign = 'center';
-                ctx.fillText('الوحدة', xUnit, y);
-                ctx.fillText('الكمية', xQty, y);
-                ctx.fillText('الإفرادي', xPrice, y);
+                if(State.settings.taPrintFields?.unit !== false) ctx.fillText('الوحدة', xUnit, y);
+                if(State.settings.taPrintFields?.quantity !== false) ctx.fillText('الكمية', xQty, y);
+                if(State.settings.taPrintFields?.price !== false) ctx.fillText('الإفرادي', xPrice, y);
                 ctx.textAlign = 'left';
-                ctx.fillText('الاجمالي', xTotal, y);
+                if(State.settings.taPrintFields?.total !== false) ctx.fillText('الاجمالي', xTotal, y);
                 y += fTableHead + 6;
 
                 // Dashed Sub-header Underlines
@@ -3898,6 +3899,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 ctx.textAlign = 'left';
                 ctx.fillText('----', xTotal, y);
                 y += fTableHead + 6;
+                taPrintGridRows.push(y);
 
                 // 5. Table Rows
                 for (let i = 0; i < inv.rows.length; i++) {
@@ -3910,13 +3912,13 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     ctx.fillText(nameLines[0] || '', xName, y);
 
                     ctx.textAlign = 'center';
-                    ctx.fillText(String(r.unitName || ''), xUnit, y);
-                    ctx.fillText(Accounting.formatItemQuantity(r.qty), xQty, y);
-                    ctx.fillText(Accounting.formatItemPriceNumber(r.price), xPrice, y);
+                    if(State.settings.taPrintFields?.unit !== false) ctx.fillText(String(r.unitName || ''), xUnit, y);
+                    if(State.settings.taPrintFields?.quantity !== false) ctx.fillText(Accounting.formatItemQuantity(r.qty), xQty, y);
+                    if(State.settings.taPrintFields?.price !== false) ctx.fillText(Accounting.formatItemPriceNumber(r.price), xPrice, y);
 
                     ctx.font = `900 ${fItem}px Cairo, sans-serif`;
                     ctx.textAlign = 'left';
-                    ctx.fillText(Accounting.formatNumberOnly(r.total, inv.currency), xTotal, y);
+                    if(State.settings.taPrintFields?.total !== false) ctx.fillText(Accounting.formatNumberOnly(r.total, inv.currency), xTotal, y);
 
                     y += fItem + 8;
 
@@ -3940,10 +3942,15 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         ctx.strokeStyle = '#000000';
                         y += 13;
                     }
+                    taPrintGridRows.push(y);
                 }
                 ctx.font = `bold ${fMeta}px Cairo, sans-serif`;
                 ctx.textAlign = 'right';
-                // Product lines remain numbered; the redundant item-count label is intentionally omitted.
+                // Numbered items are shown in bordered rows and columns.
+                ctx.save();ctx.lineWidth=1;ctx.strokeStyle='#333';ctx.setLineDash([]);
+                for(const gx of [pad,widthDots*0.18,widthDots*0.30,widthDots*0.41,widthDots*0.56,widthDots*0.90,widthDots-pad]){ctx.beginPath();ctx.moveTo(gx,taPrintGridTop);ctx.lineTo(gx,y);ctx.stroke();}
+                for(const gy of taPrintGridRows){ctx.beginPath();ctx.moveTo(pad,gy);ctx.lineTo(widthDots-pad,gy);ctx.stroke();}
+                ctx.restore();
                 y += fMeta + 12;
                 drawDoubleSep();
 
@@ -3979,7 +3986,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 drawTotalRow('المبلغ الباقي', Accounting.format(inv.remainingAmount, inv.currency), fNet, true);
 
                 y += 4;
-                if(acc){
+                if(acc && State.settings.taPrintFields?.balances !== false){
                     const balanceCurr=inv.currency==='USD'?'USD':'SYP';
                     drawTotalRow('الرصيد قبل الفاتورة',dualText(dual.before[balanceCurr],balanceCurr),fBalPrev);
                     drawTotalRow('الرصيد الحالي',dualText(dual.after[balanceCurr],balanceCurr),fBalFinal,true);
@@ -3989,7 +3996,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 drawDoubleSep();
 
                 // 7. Footer Note
-                const footerLines = wrapTextLines(State.settings.footerNote || 'ثقتكم تهمنا', `bold ${fFooter}px Cairo, sans-serif`, widthDots - pad * 2);
+                const footerLines = wrapTextLines(State.settings.taPrintFields?.footer === false ? '' : (State.settings.footerNote || 'ثقتكم تهمنا'), `bold ${fFooter}px Cairo, sans-serif`, widthDots - pad * 2);
                 ctx.font = `bold ${fFooter}px Cairo, sans-serif`;
                 ctx.textAlign = 'center';
                 for (const fl of footerLines) {
@@ -5819,7 +5826,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             </select>
                             <label class="block text-xs font-extrabold">طريقة التسعير</label>
                             <select id="posTierSetting" onchange="POSController.saveSettings()" class="w-full bg-white border rounded-xl p-2.5 text-xs font-bold">
-                                <option value="account" ${!['wholesale','center','consumer'].includes(State.settings.posPriceTier)?'selected':''}>حسب الحساب والإعدادات</option>
+                                <option value="account" ${!TiqanyPricing152.validTier(State.settings.posPriceTier)?'selected':''}>حسب الحساب والإعدادات</option>
                                 <option value="wholesale" ${State.settings.posPriceTier==='wholesale'?'selected':''}>الجملة</option>
                                 <option value="center" ${State.settings.posPriceTier==='center'?'selected':''}>المركز</option>
                                 <option value="consumer" ${State.settings.posPriceTier==='consumer'?'selected':''}>المستهلك</option>
@@ -8193,7 +8200,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
                 gridContainer.innerHTML = filtered.map(itm => {
                     const u0 = itm.units[0] || { name: 'كرتونة', factor: 1, salePrice: 0, costPrice: 0 };
-                    const rawPrice = isPurchase ? Number(u0.costPrice) : (Accounting.itemSalePrice?.(itm,u0,d.accountId,['wholesale','center','consumer'].includes(d.priceTierOverride)?d.priceTierOverride:null) ?? Number(u0.salePrice));
+                    const rawPrice = isPurchase ? Number(u0.costPrice) : (Accounting.itemSalePrice?.(itm,u0,d.accountId,TiqanyPricing152.validTier(d.priceTierOverride)?d.priceTierOverride:null) ?? Number(u0.salePrice));
                     const priceInInvCurr = Accounting.convert(rawPrice, itm.currency, d.currency, d.exchangeRate);
                     const availStock = Math.round((Accounting.getItemBaseStock(itm.id, d.isEditing ? d.id : null, d.warehouseId || 'wh_main') + Number.EPSILON) * 100) / 100;
                     const inCartQty = Number(this.gridPending?.[itm.id] || 0);
@@ -8288,7 +8295,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     if(row.priceManuallySet)continue;
                     const item=State.items.find(it=>it.id===row.itemId);if(!item)continue;
                     const unit=item.units?.find(u=>u.name===row.unitName)||item.units?.[0];
-                    const raw=Accounting.itemSalePrice(item,unit,accountId,['wholesale','center','consumer'].includes(this.draft.priceTierOverride)?this.draft.priceTierOverride:null);
+                    const raw=Accounting.itemSalePrice(item,unit,accountId,TiqanyPricing152.validTier(this.draft.priceTierOverride)?this.draft.priceTierOverride:null);
                     row.baseCurrency=item.currency;row.basePrice=raw;
                     row.price=Accounting.convert(raw,item.currency,this.draft.currency,this.draft.exchangeRate);
                 }}
@@ -8342,7 +8349,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     if (basePrice === undefined && item) {
                         const unitObj = item.units.find(u => u.name === row.unitName) || item.units[0];
                         const isPurchase = (this.draft.type === 'purchase' || this.draft.type === 'purchase_return');
-                        basePrice = isPurchase ? Number(unitObj?.costPrice || 0) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,['wholesale','center','consumer'].includes(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
+                        basePrice = isPurchase ? Number(unitObj?.costPrice || 0) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,TiqanyPricing152.validTier(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
                         row.baseCurrency = baseCurr;
                         row.basePrice = basePrice;
                     }
@@ -8382,7 +8389,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     if (!item) continue;
                     const unitObj = item.units.find(u => u.name === row.unitName) || item.units[0];
                     const isPurchase = (this.draft.type === 'purchase' || this.draft.type === 'purchase_return');
-                    const rawPrice = isPurchase ? Number(unitObj?.costPrice || 0) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,['wholesale','center','consumer'].includes(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
+                    const rawPrice = isPurchase ? Number(unitObj?.costPrice || 0) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,TiqanyPricing152.validTier(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
                     row.baseCurrency = item.currency;
                     row.basePrice = rawPrice;
                     row.price = Accounting.convert(rawPrice, item.currency, this.draft.currency, rate);
@@ -8419,7 +8426,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const unit0 = item.units[0] || { name: 'قطعة', factor: 1, salePrice: 0, costPrice: 0 };
                 const isPurchase = (this.draft.type === 'purchase' || this.draft.type === 'purchase_return');
                 if(isPurchase && item.isBundle)return UI.toast('التجميعة تُباع من مكوّناتها ولا تُشترى كمخزون مستقل','warn');
-                const rawPrice = isPurchase ? Number(unit0.costPrice) : (Accounting.itemSalePrice?.(item,unit0,this.draft.accountId,['wholesale','center','consumer'].includes(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unit0.salePrice));
+                const rawPrice = isPurchase ? Number(unit0.costPrice) : (Accounting.itemSalePrice?.(item,unit0,this.draft.accountId,TiqanyPricing152.validTier(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unit0.salePrice));
                 const convertedPrice = Accounting.convert(rawPrice, item.currency, this.draft.currency, this.draft.exchangeRate);
 
                 const existingRow = this.draft.rows.find(r => r.itemId === item.id && r.unitName === unit0.name);
@@ -8464,7 +8471,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 // Store cost at sale time; later purchases must not restate past sale profits.
                 row.baseCostPrice = (Accounting.itemCostPrice?.(item, unitObj) ?? Number(unitObj.costPrice) ?? 0);
                 const isPurchase = (this.draft.type === 'purchase' || this.draft.type === 'purchase_return');
-                const rawUnitPrice = isPurchase ? Number(unitObj.costPrice) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,['wholesale','center','consumer'].includes(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
+                const rawUnitPrice = isPurchase ? Number(unitObj.costPrice) : (Accounting.itemSalePrice?.(item,unitObj,this.draft.accountId,TiqanyPricing152.validTier(this.draft.priceTierOverride)?this.draft.priceTierOverride:null) ?? Number(unitObj?.salePrice||0));
                 row.baseCurrency = item.currency;
                 row.basePrice = rawUnitPrice;
                 row.price = Accounting.convert(rawUnitPrice, item.currency, this.draft.currency, this.draft.exchangeRate);
@@ -8601,7 +8608,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                           <div class="ta-quick-picker" title="اضغط لاختيار طريقة التسعير">
                             <span class="ta-quick-picker__face"><i class="fas fa-tags" aria-hidden="true"></i><span>${({account:'حسب إعدادات الحساب',wholesale:'سعر الجملة',center:'سعر المركز',consumer:'سعر المستهلك'})[d.priceTierOverride] || 'حسب إعدادات الحساب'}</span></span>
                             <select id="invoicePricingTier" aria-label="اختيار طريقة تسعير الفاتورة" onchange="InvoiceController.changeInvoicePricingTier(this.value)">
-                                <option value="account" ${!['wholesale','center','consumer'].includes(d.priceTierOverride)?'selected':''}>حسب إعدادات الحساب</option>
+                                <option value="account" ${!TiqanyPricing152.validTier(d.priceTierOverride)?'selected':''}>حسب إعدادات الحساب</option>
                                 <option value="wholesale" ${d.priceTierOverride==='wholesale'?'selected':''}>سعر الجملة</option>
                                 <option value="center" ${d.priceTierOverride==='center'?'selected':''}>سعر المركز</option>
                                 <option value="consumer" ${d.priceTierOverride==='consumer'?'selected':''}>سعر المستهلك</option>
@@ -8982,7 +8989,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         <div class="border border-teal-200 bg-teal-50 rounded-xl p-2.5">
                             <label for="accPriceTier" class="block text-xs font-extrabold mb-1">طريقة تسعير المبيعات لهذا الحساب</label>
                             <select id="accPriceTier" onchange="AccountController.markAccDirty()" class="w-full border rounded-lg px-2 py-2 bg-white font-bold">
-                              <option value="settings" ${!ex || !['wholesale','center','consumer'].includes(ex.priceTier) ? 'selected' : ''}>حسب الإعدادات (يتبع التسعير الافتراضي)</option>
+                              <option value="settings" ${!ex || !TiqanyPricing152.validTier(ex.priceTier) ? 'selected' : ''}>حسب الإعدادات (يتبع التسعير الافتراضي)</option>
                               <option value="wholesale" ${ex?.priceTier === 'wholesale' ? 'selected' : ''}>سعر الجملة (ثابت لهذا الحساب)</option>
                               <option value="center" ${ex?.priceTier === 'center' ? 'selected' : ''}>سعر المركز (ثابت لهذا الحساب)</option>
                               <option value="consumer" ${ex?.priceTier === 'consumer' ? 'selected' : ''}>سعر المستهلك (ثابت لهذا الحساب)</option>
@@ -9026,7 +9033,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const openingUsd = Accounting.parseNum(document.getElementById('accOpenUsd')?.value);
                 const paymentTerms = document.getElementById('accTerms')?.value.trim() || '';
                 const chosenTier = document.getElementById('accPriceTier')?.value;
-                const priceTier = ['wholesale','center','consumer'].includes(chosenTier) ? chosenTier : 'settings';
+                const priceTier = TiqanyPricing152.validTier(chosenTier) ? chosenTier : 'settings';
 
                 if (!name) {
                     UI.toast('يرجى إدخال اسم العميل أو المورد', 'error');
@@ -9639,7 +9646,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 UI.toast('تمت إزالة العملة من القائمة', 'success');
             },
             async setDefaultInvoicePriceTier(value) {
-                if (!['wholesale','center','consumer'].includes(value)) return;
+                if (!TiqanyPricing152.validTier(value)) return;
                 const previous = State.settings.defaultInvoicePriceTier;
                 State.settings.defaultInvoicePriceTier = value;
                 try {
@@ -10531,5 +10538,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 <script defer src="static/ta-fx-buy-sell-147.js"></script>
 <script defer src="static/ta-report-local-date-148.js"></script>
 <script src="static/ta-manager-enhancements-152.js"></script>
+<script src="static/ta-pricing-modes-152.js"></script>
+<script src="static/ta-print-customization-152.js"></script>
 </body>
 </html>
