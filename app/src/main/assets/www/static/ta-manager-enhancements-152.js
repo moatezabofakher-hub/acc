@@ -40,6 +40,8 @@ const E={
      const listType=section.querySelector('#setDefaultInvoiceListType')?.parentElement;
      const pos=section.querySelector('#posInvoiceSettings');
      if(listType){
+       const pricing=section.querySelector('#setDefaultInvoicePriceTier')?.parentElement;
+       if(pricing)listType.before(pricing);
        listType.insertAdjacentHTML('beforebegin',html);
        if(pos)listType.after(pos);
      }else section.insertAdjacentHTML('afterbegin',html);

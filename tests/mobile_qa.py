@@ -16,7 +16,7 @@ with sync_playwright() as pw:
     assert p.evaluate('TiqanySettingsPages152.current()')=='invoices'
     assert section.locator('summary').is_hidden()
     ids=section.locator('select').evaluate_all('(list)=>list.map(x=>x.id)')
-    order=['setDefaultInvoiceCurrency','setDefaultPriceTier','taDefaultSaleUnitName','taDefaultPurchaseUnitName','setDefaultInvoiceListType','posAccountSetting']
+    order=['setDefaultInvoiceCurrency','setDefaultInvoicePriceTier','taDefaultSaleUnitName','taDefaultPurchaseUnitName','setDefaultInvoiceListType','posAccountSetting']
     assert all(i in ids for i in order) and sorted(order,key=ids.index)==order, ids
     p.evaluate('TiqanySettingsPages152.back()')
     assert p.locator('#dlgDiscardBtn').inner_text()=='الخروج بدون تعديل'
