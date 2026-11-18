@@ -68,6 +68,8 @@ jobs:
         run: |
           node --test tests/release141-shareholder-edit-back.test.js
           node --test tests/capital-ledger-121.test.js tests/test_solo.js
+      - name: Verify first-run manager and 100% shareholder allocation
+        run: node --test tests/onboarding-shareholders-153.test.cjs
       - name: Verify solo currency exchange accounting and history
         run: |
           node --test tests/currency-exchange-142.test.cjs
