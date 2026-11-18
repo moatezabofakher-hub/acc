@@ -12,7 +12,7 @@ test('v152 standalone manager settings page JavaScript parses safely',()=>{
  assert.match(s,/draft\.cancel\(key\)/);
  assert.match(s,/draft\.discardSilently/);
  assert.match(s,/confirmExit/);
- assert.match(s,/متابعة الإعداد/);
+ assert.match(s,/if\(!hasChanges\(\)\)/);
 });
 test('v152 Back and dock navigation require Save, Continue Editing or Discard',()=>{
  const s=fs.readFileSync(manager,'utf8');
