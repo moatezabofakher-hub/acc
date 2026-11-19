@@ -3,10 +3,10 @@ name: Tiqany Acc - Solo Signed Release
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'fix/scroll-behavior-144']
+    branches: ['feature/functional-icons-header', main, 'fix/scroll-behavior-144', 'feature/manager-finance-ui-from-152']
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   release:
@@ -81,6 +81,22 @@ jobs:
           node --check app/src/main/assets/www/static/ta-currency-exchange-ui-142.js
           node --check app/src/main/assets/www/static/ta-report-local-date-148.js
           node --check app/src/main/assets/www/static/ta-fx-buy-sell-147.js
+      - name: Test manager-only v152 financial UI enhancements
+        run: |
+          set -euo pipefail
+          node --check app/src/main/assets/www/static/ta-manager-enhancements-152.js
+          node --check app/src/main/assets/www/static/ta-pricing-modes-152.js
+          node --check app/src/main/assets/www/static/ta-print-customization-152.js
+          node --check app/src/main/assets/www/static/ta-thermal-table-152.js
+          node --test tests/manager-enhancements-152.test.cjs
+          node --test tests/thermal-grid-152.test.cjs
+      - name: Verify v152 standalone settings pages and draft Back guard
+        run: node --test tests/settings-pages-152.test.cjs
+      - name: Verify illustrated controls and header geometry
+        run: |
+          python -m pip install playwright==1.55.0
+          python tests/check_controls.py . solo
+          python tests/check_cash_settings.py app/src/main/assets/www
       - name: Build, sign, and verify app release APK
         shell: bash
         env:
@@ -109,19 +125,39 @@ jobs:
           "$verifier" verify --verbose --print-certs "$apk"
           cert_digest=$("$verifier" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)
           [[ "$cert_digest" =~ ^[0-9a-fA-F]{64}$ ]] || { echo '::error::Could not read signing certificate SHA-256'; exit 1; }
+          # Pin the signer from previously verified signed releases. Android
+          # cannot update an installed package if this signing key rotates.
+          PINNED_CERT_SHA256="627b41d108268f2d241858f8b82f3b706b4ad134f3545608c149edd9f32d8f59"
+          if [[ "${cert_digest,,}" != "$PINNED_CERT_SHA256" ]]; then
+            echo '::error::Unexpected APK signing certificate. Refusing release to protect in-place updates.'
+            exit 1
+          fi
           if [[ -n "$EXPECTED_CERT_SHA256" && "${cert_digest,,}" != "${EXPECTED_CERT_SHA256,,}" ]]; then
             echo '::error::Signing certificate does not match pinned certificate. Update aborted to protect install continuity.'
             exit 1
           fi
           mkdir -p output
-          cp "$apk" "output/Tiqany-Acc-Solo-3.5.152-RELEASE.apk"
-          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.152-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.152-RELEASE.apk.sha256")
+          cp "$apk" "output/Tiqany-Acc-Solo-3.5.153-RELEASE.apk"
+          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.153-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.153-RELEASE.apk.sha256")
       - name: Upload signed app APK and checksum
         uses: actions/upload-artifact@v4
         with:
-          name: Tiqany-Acc-Solo-3.5.152-RELEASE
+          name: Tiqany-Acc-Solo-3.5.153-RELEASE
           path: |
-            output/Tiqany-Acc-Solo-3.5.152-RELEASE.apk
-            output/Tiqany-Acc-Solo-3.5.152-RELEASE.apk.sha256
+            output/Tiqany-Acc-Solo-3.5.153-RELEASE.apk
+            output/Tiqany-Acc-Solo-3.5.153-RELEASE.apk.sha256
           if-no-files-found: error
           retention-days: 30
+      - name: Publish isolated signed finance preview for direct download
+        if: github.ref == 'refs/heads/feature/manager-finance-ui-from-152' || github.ref == 'refs/heads/feature/functional-icons-header'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk='output/Tiqany-Acc-Solo-3.5.153-RELEASE.apk'
+          checksum="${apk}.sha256"
+          test -s "$apk" && test -s "$checksum"
+          tag='tiqany-solo-finance-preview-'"${GITHUB_SHA:0:10}"
+          gh release create "$tag" "$apk" "$checksum" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'المحاسب التقني التطبيق المستقل - معاينة تعديلات 3.5.153' --notes 'الإصدار 3.5.153 بتحديثات الضبط والتقارير وعرض أزرار الحفظ.' --prerelease
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url --jq '.url'
