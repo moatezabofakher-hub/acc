@@ -33,7 +33,7 @@ const SoloCashbox = {
     const expenses=State.expenses||[], owners=typeof Payroll!=='undefined'?Payroll.allocations(expenses):new Map();
     for(const e of expenses) {
       const amount=Number(e?.amount||0);
-      if(amount>0||e.payroll?.kind==='salary')add({id:e.id,date:Accounting.expenseDateTime?.(e)||e.date,ref:e.payroll?.kind==='salary'?'سند صرف أجر':'مصروف',party:e.category||'مصاريف',
+      if(amount>0||e.payroll?.kind==='salary')add({id:e.id,date:typeof Accounting==='undefined'?e.date:Accounting.expenseDateTime(e),ref:e.payroll?.kind==='salary'?'سند صرف أجر':'مصروف',party:e.category||'مصاريف',
         desc:e.payroll?.kind==='salary'?Payroll.description(e,expenses,owners):(e.note||'مصروف نقدي'),currency:e.currency,inflow:0,outflow:amount});
     }
     for(const m of CapitalLedger.cashMovements())add(m);
