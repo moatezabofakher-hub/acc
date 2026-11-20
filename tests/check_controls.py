@@ -37,6 +37,8 @@ with sync_playwright() as pw:
    if ed!='employee':
     p.evaluate("""()=>{AppNav.stack=[{screen:'dashboard',params:{}},{screen:'expenses',params:{}}];AppNav.renderCurrent();const input=document.getElementById('expenseAmount');input.value='23';input.dispatchEvent(new Event('input',{bubbles:true}));AppNav.handleBackButton();}""")
     assert p.locator('#dlgDiscardBtn').is_visible()
+    yes=p.locator('#dlgSaveBtn').bounding_box();no=p.locator('#dlgDiscardBtn').bounding_box()
+    assert abs(yes['y']-no['y'])<=1 and yes['x']>=no['x']+no['width']-1,(yes,no)
     p.locator('#dlgDiscardBtn').evaluate('(e)=>e.click()')
     assert p.evaluate('AppNav.current().screen')=='dashboard'
     p.evaluate("""()=>{AppNav.stack=[{screen:'dashboard',params:{}},{screen:'expenses',params:{}}];AppNav.renderCurrent();AppNav.handleBackButton();}""")
