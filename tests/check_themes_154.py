@@ -337,6 +337,12 @@ with sync_playwright() as playwright:
         assert line.locator('.agent-pos-line-fields > .ta-pos-delete').count()==1
     else:
         assert remove.bounding_box()['x']+remove.bounding_box()['width']<=unit.bounding_box()['x']+1
+    save_actions=page.locator('.ta-agent-pos-actions button' if employee else '.ta-pos-footer-actions button')
+    assert save_actions.count()==2
+    for action in save_actions.all():
+        fill,ink=action.evaluate("e=>[getComputedStyle(e).backgroundImage,getComputedStyle(e).webkitTextFillColor]")
+        colors=[tuple(map(int,m)) for m in re.findall(r'rgb\((\d+), (\d+), (\d+)\)',fill)]
+        assert colors and all(g>r and g>b for r,g,b in colors) and ink=='rgb(255, 255, 255)',(fill,ink)
     unit.select_option('كرتونة')
     page.wait_for_function("employee=>(employee?Agent.draft:InvoiceController.draft.rows)[0].unitName==='كرتونة'",arg=employee)
     line.evaluate("e=>e.scrollIntoView({block:'center',behavior:'instant'})")
