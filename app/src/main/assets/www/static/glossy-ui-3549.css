@@ -216,11 +216,11 @@ body.ta-3d-v3524 .ta-bundle-add-btn,
 
 /* Contrast audit: unobtrusive icon-only actions without a colored button surface.
  * Retain colored/destructive/icon-box buttons and thermal-print styling. */
-body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):not([class*="bg-"]):not([class*="ta-"]):not([class*="text-white"]){
+body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):where(:not(.ta-footer-actions button)):not([class*="bg-"]):not([class*="ta-"]):not([class*="text-white"]){
   display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:34px;padding:5px;
   border:1px solid #a9cad5!important;border-radius:11px;
   background:linear-gradient(150deg,#fff,#d9edf5)!important;
   color:#185777!important;box-shadow:0 3px 0 #adcbd6,0 6px 9px #134b6120,inset 0 1px #fff!important;
 }
-body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):not([class*="bg-"]):not([class*="ta-"]):not([class*="text-white"]) > i{color:#185777!important;}
-body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):not([class*="bg-"]):not([class*="ta-"]):active{transform:translateY(2px);box-shadow:0 1px 0 #adcbd6!important;}
+body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):where(:not(.ta-footer-actions button)):not([class*="bg-"]):not([class*="ta-"]):not([class*="text-white"]) > i{color:#185777!important;}
+body.ta-3d-v3524 :is(#mainContent,#modalBox) button:has(> i:only-child):where(:not(.ta-footer-actions button)):not([class*="bg-"]):not([class*="ta-"]):active{transform:translateY(2px);box-shadow:0 1px 0 #adcbd6!important;}

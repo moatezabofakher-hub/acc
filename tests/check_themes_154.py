@@ -237,6 +237,11 @@ with sync_playwright() as playwright:
                 if root.name!='web':
                     for glyph in ('.fa-warehouse', '.fa-tags'):
                         surface.locator('.ta-quick-picker__face '+glyph+' svg').first.wait_for(state='visible')
+                for button in footer.locator('.ta-footer-actions button').all():
+                    fill=button.evaluate("e=>getComputedStyle(e).backgroundImage")
+                    colors=[tuple(map(int,m)) for m in re.findall(r'rgb\((\d+), (\d+), (\d+)\)',fill)]
+                    assert colors and all(g>r and g>b for r,g,b in colors),(theme,fill)
+                    assert button.evaluate("e=>getComputedStyle(e).webkitTextFillColor")=='rgb(255, 255, 255)'
                 old_size=page.viewport_size
                 for width in ((800,1280) if root.name=='web' else (320,390)):
                     page.set_viewport_size({'width':width,'height':640})
