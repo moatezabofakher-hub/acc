@@ -1442,7 +1442,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             },
             notifications(value) {
                 const n = value && typeof value === 'object' ? value : {};
-                return { entries:(Array.isArray(n.entries)?n.entries:[]).filter(e=>e && e.type==='stock'),
+                return { entries:(Array.isArray(n.entries)?n.entries:[]).filter(e=>e && (e.type==='stock'||e.type==='payroll')),
                     stockLevels:n.stockLevels && typeof n.stockLevels==='object'?n.stockLevels:null };
             },
             ledger(data) {
@@ -1692,6 +1692,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         // Only snapshot successful IndexedDB commits; background workers never
                         // touch the live accounting database or read an unfinished invoice.
                         try { BackupController.stageLatest(); } catch (_) {}
+                        if(typeof PayReminders!=='undefined')PayReminders.afterCommit();
                         resolve();
                     };
                 });
@@ -5870,7 +5871,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const mode = State.settings.btPrintMode || 'auto';
                 main.innerHTML = `
                     <div class="mb-3 flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2" data-app-build="${InstalledAppVersion.number()}">
-                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.159</span>
+                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.160</span>
                         <span class="text-[10px] font-bold text-emerald-700">مظهر ثلاثي الأبعاد موحّد</span>
                     </div>
                     ${TiqanySupport.launch()}
@@ -8197,7 +8198,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
                     <div class="space-y-2 mb-3">
                         <div class="relative">
-                            <button type="button" class="absolute right-0 top-0 h-full px-3 text-slate-600" aria-label="بحث عن مادة" onclick="const field=document.getElementById('gridPickerSearch'); field.click(); field.focus(); InvoiceController.renderItemGridCards()"><i class="fas fa-search"></i></button>
+                            <button type="button" id="invoiceGridSearchButton" class="absolute right-0 top-0 h-full px-3 text-slate-600" aria-label="بحث عن مادة" onclick="const field=document.getElementById('gridPickerSearch'); field.click(); field.focus(); InvoiceController.renderItemGridCards()"><i class="fas fa-search"></i></button>
                             <input type="search" aria-label="بحث باسم المادة أو الباركود" id="gridPickerSearch" oninput="InvoiceController.gridSearchQuery = this.value; InvoiceController.renderItemGridCards()" placeholder="ابحث باسم المادة أو الباركود..." class="w-full pr-8 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                         <div id="gridCatPills" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
@@ -10431,6 +10432,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 history.replaceState({ appGuard: true, depth: 1 }, '');
                 history.pushState({ appGuard: true, depth: 1 }, '');
             } catch (e) {}
+            PayReminders.start();
             if(!CompanyLifecycle.needsSetup()){
                 StockNotifications.bootstrap();
                 BackupController.stageLatest();
@@ -10579,7 +10581,10 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 <script defer src="static/money-input.js"></script>
 <script defer src="static/field-entry.js"></script>
 <script defer src="static/invoice-grid-entry.js"></script>
+<link rel="stylesheet" href="static/entry-colors.css">
+<script defer src="static/pay-calendar.js"></script>
 <script defer src="static/payroll.js"></script>
+<script defer src="static/pay-reminders.js"></script>
 <link rel="stylesheet" href="static/payroll.css">
 </body>
 </html>

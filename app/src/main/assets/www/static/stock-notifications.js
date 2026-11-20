@@ -57,7 +57,7 @@ const StockNotifications = {
       State.alertCenter={entries:[],stockLevels:null};
     const n=State.alertCenter;
     if(!Array.isArray(n.entries)) n.entries=[];
-    n.entries=n.entries.filter(x=>x && x.type==='stock');
+    n.entries=n.entries.filter(x=>x && (x.type==='stock'||x.type==='payroll'));
     delete n.seenImportIds;
     return n;
   },
@@ -80,6 +80,7 @@ const StockNotifications = {
     this.updateBadge();this.openNativePending();
   },
   prepareForSave() {
+    if(typeof PayReminders!=='undefined')PayReminders.recordDue();
     const n=this.ensure(),created=[];
     if(!n.stockLevels||typeof n.stockLevels!=='object') {
       n.stockLevels=this.stockSnapshot();return created;
@@ -123,7 +124,7 @@ const StockNotifications = {
         <div class="flex items-center gap-2 justify-between"><strong class="ta-alert-title text-sm text-slate-800">⚠️ ${escape(entry.title)}</strong>${entry.read?'':'<span class="ta-alert-badge rounded-full bg-rose-500 text-white text-[10px] px-2 py-0.5">جديد</span>'}</div>
         <p class="ta-alert-detail text-xs text-slate-600 mt-1">${escape(entry.detail)}</p>
         <p class="ta-alert-meta text-[10px] text-slate-400 mt-2">${escape(String(entry.at||'').slice(0,19).replace('T',' '))}</p>
-      </button>`):'<div class="rounded-2xl bg-white border p-8 text-center text-sm text-slate-500">لا توجد إشعارات حالياً. ستظهر هنا تنبيهات نفاد المخزون.</div>'}
+      </button>`):'<div class="rounded-2xl bg-white border p-8 text-center text-sm text-slate-500">لا توجد إشعارات حالياً. ستظهر هنا تنبيهات المخزون ومواعيد الأجور.</div>'}
     </div>`;
   },
   async readAll(){
@@ -133,6 +134,11 @@ const StockNotifications = {
     catch(e){n.entries.forEach((x,i)=>x.read=before[i]);this.updateBadge();UI.toast('تعذر حفظ حالة الإشعارات','error');}
   },
   async open(id){
+    if(typeof id==='string' && id.startsWith('paydue:')){
+      const row=this.ensure().entries.find(e=>e.id===id);
+      if(row&&!row.read){row.read=true;this.updateBadge();try{await StorageEngine.saveState();}catch{row.read=false;this.updateBadge();}}
+      return PayReminders.open(id);
+    }
     const entry=this.ensure().entries.find(x=>x.id===id);
     if(!entry)return UI.toast('هذا الإشعار غير متوفر','warn');
     if(!entry.read){entry.read=true;this.updateBadge();try{await StorageEngine.saveState();}catch(e){entry.read=false;this.updateBadge();}}
