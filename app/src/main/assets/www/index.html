@@ -1378,7 +1378,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
     <!-- Bottom Taskbar / Navigation Bar (Intercepted by Unsaved Changes Guard) -->
     <nav class="ta-bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <div class="max-w-3xl mx-auto grid grid-cols-5 h-14">
+        <div class="max-w-3xl mx-auto grid grid-cols-6 h-14">
             <button onclick="AppNav.navigate('dashboard')" data-nav="dashboard" class="nav-btn flex flex-col items-center justify-center gap-1 text-emerald-600 font-bold transition">
                 <i class="fas fa-home text-lg"></i>
                 <span class="text-[11px]">الرئيسية</span>
@@ -1395,6 +1395,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 <i class="fas fa-users text-lg"></i>
                 <span class="text-[11px]">الحسابات</span>
             </button>
+            <button onclick="AppNav.navigate('payroll')" data-nav="payroll" class="nav-btn flex flex-col items-center justify-center gap-1 text-slate-500"><i class="fas fa-id-card text-lg"></i><span class="text-[11px]">الموظفون</span></button>
             <button onclick="AppNav.navigate('reports')" data-nav="reports" class="nav-btn flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-slate-800 transition">
                 <i class="fas fa-chart-pie text-lg"></i>
                 <span class="text-[11px]">التقارير</span>
@@ -1503,7 +1504,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             capitalMovements: [],
             shareholderOwners: [],
             shareholderMovements: [],
-            cashShifts: [], currencyExchanges: [],
+            payrollStaff: [], cashShifts: [], currencyExchanges: [],
             alertCenter: { entries: [], stockLevels: null }
         };
 
@@ -1631,7 +1632,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             State.capitalMovements = Array.isArray(d.capitalMovements) ? d.capitalMovements : [];
                             State.shareholderOwners = Array.isArray(d.shareholderOwners) ? d.shareholderOwners : [];
                             State.shareholderMovements = Array.isArray(d.shareholderMovements) ? d.shareholderMovements : [];
-                            State.currencyExchanges = Array.isArray(d.currencyExchanges) ? d.currencyExchanges : []; State.cashShifts=Array.isArray(d.cashShifts)?d.cashShifts:[];
+                            State.currencyExchanges = Array.isArray(d.currencyExchanges) ? d.currencyExchanges : []; State.payrollStaff=Array.isArray(d.payrollStaff)?d.payrollStaff:[]; State.cashShifts=Array.isArray(d.cashShifts)?d.cashShifts:[];
                             State.alertCenter = SoloSanitize.notifications(d.alertCenter);
                             if (!State.warehouses.some(w => w.id === State.settings.selectedWarehouseId))
                                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1675,7 +1676,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             capitalMovements: State.capitalMovements,
                             shareholderOwners: State.shareholderOwners,
                             shareholderMovements: State.shareholderMovements,
-                            cashShifts: State.cashShifts, currencyExchanges: State.currencyExchanges,
+                            payrollStaff: State.payrollStaff, cashShifts: State.cashShifts, currencyExchanges: State.currencyExchanges,
                             alertCenter: State.alertCenter
                         }
                     });
@@ -1707,7 +1708,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 State.capitalMovements = [];
                 State.shareholderOwners = [];
                 State.shareholderMovements = [];
-                State.currencyExchanges = []; State.cashShifts=[];
+                State.currencyExchanges = []; State.payrollStaff=[]; State.cashShifts=[];
                 State.settings.shareholderDistribution = {values:{}};
                 State.alertCenter = {entries:[],stockLevels:null};
                 State.settings.selectedWarehouseId = 'wh_main';
@@ -1903,7 +1904,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:registry}
                     ]);
                     this.registry=registry;this.activeId=id;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','payrollStaff','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(newState[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(newState[key]):newState[key])??DEFAULT_PROFILE[key]));
                     State.license=commonLicense;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -1985,7 +1986,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         {id:'profile_registry',data:updated}
                     ],[profileId]);
                     this.registry=updated;this.activeId=newId;
-                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','fieldSync','alertCenter'])
+                    for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','payrollStaff','fieldSync','alertCenter'])
                         State[key]=JSON.parse(JSON.stringify(newData[key]??DEFAULT_PROFILE[key]));
                     State.license=license;
                     AppNav.clearDirty();AppNav.clearModalDirty();UI.forceCloseModal();
@@ -2163,8 +2164,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const license=State.license;
                 this._preRestoreProtection=JSON.parse(JSON.stringify(State.settings?.appProtection||{}));
                 const fresh=this.newState(d.settings?.companyName||this.currentName());
-                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','alertCenter'])
-                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(['capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts'].includes(key)?[]:null)));
+                for(const key of ['settings','categories','items','accounts','invoices','vouchers','warehouses','transfers','expenses','capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','payrollStaff','alertCenter'])
+                    State[key]=JSON.parse(JSON.stringify((key==='alertCenter'?SoloSanitize.notifications(d[key]):key==='invoices'||key==='vouchers'||key==='expenses'?SoloSanitize.documents(d[key]):d[key])??fresh[key]??(['capitalMovements','shareholderOwners','shareholderMovements','currencyExchanges','cashShifts','payrollStaff'].includes(key)?[]:null)));
                 State.license=license; // Activation cannot be imported from another device/business.
                 // Keep the approved account's security identity on this device.
                 // On a fresh device, carry forward the authenticated backup PIN but
@@ -4568,6 +4569,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     case 'account_statement': return this.renderAccountStatement(main, params);
                     case 'vouchers_list': return this.renderVouchersList(main, params);
                     case 'voucher_form': return VoucherController.renderForm(main, params);
+                    case 'payroll': return Payroll.render(main, params);
                     case 'reports': return this.renderReports(main, params);
                     case 'settings': return this.renderSettings(main);
                     case 'notifications': return StockNotifications.render(main);
@@ -5852,7 +5854,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const mode = State.settings.btPrintMode || 'auto';
                 main.innerHTML = `
                     <div class="mb-3 flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2" data-app-build="${InstalledAppVersion.number()}">
-                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.156</span>
+                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.157</span>
                         <span class="text-[10px] font-bold text-emerald-700">مظهر ثلاثي الأبعاد موحّد</span>
                     </div>
                     ${TiqanySupport.launch()}
@@ -7748,6 +7750,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             editExpense(id) {
                 const exp = (State.expenses||[]).find(e=>e.id===id);
                 if (!exp) return;
+                if (exp.payroll) return Payroll.edit(exp);
                 const put=(elementId,value)=>{const el=document.getElementById(elementId);if(el)el.value=value;};
                 put('expenseId',exp.id);
                 put('expenseAmount',exp.amount);
@@ -10565,5 +10568,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 
 <script defer src="static/ta-settings-pages-152.js"></script>
 <script defer src="static/ta-themes-154.js"></script>
+<script defer src="static/money-input.js"></script>
+<script defer src="static/payroll.js"></script>
+<link rel="stylesheet" href="static/payroll.css">
 </body>
 </html>
