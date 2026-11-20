@@ -13,7 +13,6 @@ const SoloCashbox = {
       movements.push(m);
     }
     for(const inv of State.invoices||[]) {
-      if(inv?.cashChannel==='transfer')continue;
       const paid=Number(inv?.paidAmount||0);
       if(!(paid>0))continue;
       const incoming=['sale','purchase_return'].includes(inv.type);
@@ -22,7 +21,6 @@ const SoloCashbox = {
         desc:'فاتورة',currency:inv.currency,inflow:incoming?paid:0,outflow:incoming?0:paid});
     }
     for(const v of State.vouchers||[]) {
-      if(v?.cashChannel==='transfer')continue;
       const amount=Number(v?.amount||0);
       if(!(amount>0))continue;
       const incoming=v.type==='receipt';

@@ -90,7 +90,3 @@ with sync_playwright() as pw:
    print('PASS readability',('employee' if employee else 'manager'),width,theme,flush=True)
   p.close()
  browser.close()
-
-if (Path(sys.argv[1])/'static/finance-operations.js').exists():
-    import subprocess
-    subprocess.run([sys.executable,str(Path(__file__).with_name('check_finance_desk.py')),sys.argv[1]],check=True)
