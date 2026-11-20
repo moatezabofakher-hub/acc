@@ -30,13 +30,14 @@ const SoloCashbox = {
         party:(State.accounts||[]).find(a=>a.id===v.accountId)?.name||'حساب عام',
         desc:v.note||'سند مالي',currency:v.currency,inflow:incoming?amount:0,outflow:incoming?0:amount});
     }
-    for(const e of State.expenses||[]) {
+    const expenses=State.expenses||[], owners=typeof Payroll!=='undefined'?Payroll.allocations(expenses):new Map();
+    for(const e of expenses) {
       const amount=Number(e?.amount||0);
-      if(amount>0)add({id:e.id,date:e.date||'',ref:'مصروف',party:e.category||'مصاريف',
-        desc:e.note||'مصروف نقدي',currency:e.currency,inflow:0,outflow:amount});
+      if(amount>0||e.payroll?.kind==='salary')add({id:e.id,date:Accounting.expenseDateTime?.(e)||e.date,ref:e.payroll?.kind==='salary'?'سند صرف أجر':'مصروف',party:e.category||'مصاريف',
+        desc:e.payroll?.kind==='salary'?Payroll.description(e,expenses,owners):(e.note||'مصروف نقدي'),currency:e.currency,inflow:0,outflow:amount});
     }
     for(const m of CapitalLedger.cashMovements())add(m);
-    movements.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    movements.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
     return {sypCash,usdCash,movements};
   }
 };

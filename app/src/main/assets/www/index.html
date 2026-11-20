@@ -2740,6 +2740,18 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 };
             },
 
+            expenseDateTime(row) {
+                const day = String(row.date || '');
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return day;
+                const stamp = row.createdAt || row.fieldOrigin?.createdAt || row.updatedAt;
+                if (!stamp || !/[T ]\d{2}:\d{2}/.test(stamp)) return day;
+                const instant = new Date(stamp);
+                if (!Number.isFinite(instant.getTime())) return day;
+                const local = new Date(instant.getTime()-instant.getTimezoneOffset()*60000).toISOString();
+                // A later edit or receipt on a different day is not evidence of a legacy creation time.
+                if (!row.createdAt && local.slice(0,10)!==day) return day;
+                return day+'T'+local.slice(11,23);
+            },
             getCashboxSummary() {
                 let sypCash = 0;
                 let usdCash = 0;
@@ -2792,15 +2804,16 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     });
                 }
 
+                const advanceOwners = typeof Payroll!=='undefined' ? Payroll.allocations(State.expenses || []) : new Map();
                 for (const exp of (State.expenses || [])) {
                     const amt = Number(exp.amount) || 0;
-                    if (!(amt > 0)) continue;
+                    if (!(amt > 0) && exp.payroll?.kind!=='salary') continue;
                     if (exp.currency === 'USD') usdCash = this.round(usdCash - amt, 'USD');
                     else sypCash = this.round(sypCash - amt, 'SYP');
                     movements.push({
-                        id: exp.id, docType: 'expense', date: exp.date,
-                        ref: 'مصروف', party: exp.category || 'مصاريف',
-                        desc: exp.note || 'مصروف نقدي', currency: exp.currency,
+                        id: exp.id, docType: 'expense', date: this.expenseDateTime(exp),
+                        ref: exp.payroll?.kind==='salary'?'سند صرف أجر':'مصروف', party: exp.category || 'مصاريف',
+                        desc: exp.payroll?.kind==='salary'?Payroll.description(exp,State.expenses,advanceOwners):(exp.note || 'مصروف نقدي'), currency: exp.currency,
                         inflow: 0, outflow: amt
                     });
                 }
@@ -4569,6 +4582,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     case 'account_statement': return this.renderAccountStatement(main, params);
                     case 'vouchers_list': return this.renderVouchersList(main, params);
                     case 'voucher_form': return VoucherController.renderForm(main, params);
+                    case 'opening_inventory': return OpeningInventory.list(main);
+                    case 'opening_invoice': return OpeningInventory.editor(main, params);
                     case 'payroll': return Payroll.render(main, params);
                     case 'reports': return this.renderReports(main, params);
                     case 'settings': return this.renderSettings(main);
@@ -4878,7 +4893,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             renderExpenses(main, params = {}) {
                 UI.setHeader('<i class="fas fa-receipt text-orange-400"></i> <span>حساب المصاريف</span>',
                              'مصاريف نقدية تُخصم من صافي الأرباح ومن رصيد الصندوق');
-                const list = (State.expenses||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+                const list = (State.expenses||[]).slice().sort((a,b)=>Accounting.expenseDateTime(b).localeCompare(Accounting.expenseDateTime(a)));
+                const advanceOwners = typeof Payroll!=='undefined'?Payroll.allocations(list):new Map();
                 const rate = Number(State.settings.exchangeRate) || 1;
                 const sumUsd = list.reduce((acc,e)=>acc + (e.currency === 'USD' ? Number(e.amount)||0 : (Number(e.amount)||0)/(Number(e.exchangeRate)||rate)),0);
                 main.innerHTML = `
@@ -4916,7 +4932,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                                 <div class="min-w-0">
                                     <b>${AppEscape.text(e.category)}</b>
                                     
-                                    <div class="text-slate-500">${AppEscape.text(e.note||'')} · ${AppEscape.text(e.date||'')}</div>
+                                    <div class="text-slate-500">${AppEscape.text(e.payroll?.kind==='salary'?Payroll.description(e,list,advanceOwners):e.note||'')} · ${AppEscape.text(TiqanyDateView.visible(Accounting.expenseDateTime(e)))}</div>
                                     <div class="text-[10px] text-slate-400">سعر صرف العملية: ${Number(e.exchangeRate||1).toLocaleString('en-US')}</div>
                                 </div>
                                 <div class="text-left shrink-0">
@@ -5854,7 +5870,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const mode = State.settings.btPrintMode || 'auto';
                 main.innerHTML = `
                     <div class="mb-3 flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2" data-app-build="${InstalledAppVersion.number()}">
-                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.157</span>
+                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.158</span>
                         <span class="text-[10px] font-bold text-emerald-700">مظهر ثلاثي الأبعاد موحّد</span>
                     </div>
                     ${TiqanySupport.launch()}
@@ -7057,20 +7073,20 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 if (existingId) {
                     const idx = State.items.findIndex(i => i.id === existingId);
                     if (idx > -1) {
-                        State.items[idx] = {
+                        State.items[idx] = OpeningInventory.cardChange(State.items[idx],{
                             ...State.items[idx],
                             name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
                             photoData: this.safePhotoData(this.tempPhotoData),
                             units: this.tempUnits
-                        };
+                        });
                     }
                 } else {
-                    State.items.push({
+                    State.items.push(OpeningInventory.cardChange(null,{
                         id: 'itm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
                         name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
                         photoData: this.safePhotoData(this.tempPhotoData),
                         units: this.tempUnits
-                    });
+                    }));
                     await LicenseManager.recordNewOperation();
                 }
 
@@ -7734,6 +7750,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 if (idx < 0 && !LicenseManager.canPerformOperation()) return;
                 const expense = { id: idx>=0 ? id : 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
                     amount:safeAmount, currency, category, date, note, exchangeRate,
+                    createdAt:idx>=0?(State.expenses[idx].createdAt || Accounting.expenseDateTime(State.expenses[idx])):new Date().toISOString(),
                     updatedAt:new Date().toISOString() };
                 if (idx>=0) State.expenses[idx] = {...State.expenses[idx], ...expense};
                 else {
@@ -7776,6 +7793,8 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
             deleteExpense(id) {
                 const exp = (State.expenses||[]).find(e=>e.id===id);
                 if (!exp) return;
+                if (exp.payroll?.kind==='advance' && Payroll.allocations(State.expenses).has(id))
+                    return UI.toast('هذه السلفة مسوّاة في سند صرف أجر. راجع سند الأجر أولاً','warn');
                 UI.showDeleteConfirm('حذف المصروف', 'سيُحذف المصروف ويُعاد أثره على صافي الربح والصندوق. هل تريد المتابعة؟', async()=>{
                     State.expenses=State.expenses.filter(e=>e.id!==id);
                     await StorageEngine.saveState();
