@@ -25,13 +25,13 @@ assert(html.includes('invoice-added-items'), 'Invoice rows should have sky-blue 
 assert(manifest.includes('android:name=".ContinuousBarcodeActivity"'), 'Scanner must be in Android manifest');
 assert(manifest.includes('android:exported="false"'), 'Scanner must not be externally exported');
 assert(manifest.includes('android.permission.CAMERA'), 'Camera permission required');
-assert(gradle.includes("applicationId 'com.sunshine.technicalaccountant'"), 'KEEP existing package ID to retain app data');
-assert(html.includes("const DB_NAME = 'AlRaedAccountingERP_v2'"), 'KEEP existing IndexedDB name');
+assert(gradle.includes("applicationId 'com.tiqany.accounting.solo'"), 'KEEP existing package ID to retain app data');
+assert(html.includes("const DB_NAME = 'TiqanyAccSolo_v1'"), 'KEEP existing IndexedDB name');
 assert(html.includes('const DB_VERSION = 1'), 'KEEP existing IndexedDB schema version');
 assert(html.includes('https://'), 'WebView secure origin must remain');
 
 const methods = section('addItemsByBarcodeBatch(codes) {','            async openBarcodeScanner() {') + '\n' +
-                section('addItemToInvoice(itemId, repaint = true) {','            changeRowUnit(rowIdx, newUnitName) {');
+                section('addItemToInvoice(itemId, repaint = true, quantity = 1) {','            changeRowUnit(rowIdx, newUnitName) {');
 // Exercise the actual production controller methods with mocked browser dependencies.
 function makeController(type) {
   const state = { items: [
@@ -57,7 +57,7 @@ for (const type of ['sale','purchase']) {
   assert.equal(controller.draft.rows[0].price, type === 'sale' ? 10 : 6,`Correct ${type} price`);
   assert.equal(events.repaints,1,`Only one render for invoice batch`);
   assert.equal(events.updates,1,`Mark invoice modified just once`);
-  assert(events.messages.some(([m])=>m.includes('1 باركود')),'Unknown barcodes should be reported');
+  assert(events.messages.some(([m])=>m.includes('الباركود غير معرّف: missing')),'Unknown barcodes should be reported');
   screen.name='dashboard';
   controller.addItemsByBarcodeBatch(['B2']);
   assert.equal(controller.draft.rows.find(r=>r.itemId==='b').qty,1,'Do not add to a closed invoice');

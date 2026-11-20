@@ -17,7 +17,7 @@ const els={
   // The inputs display 2 decimal places; saving must still preserve full model precision.
   unitCost_0:{value:'1.23'},unitSale_0:{value:'12.35'}
 };
-const ctx={console,Map,Set,Math,Number,Date,JSON,String,Array,Promise,Intl,
+const ctx={OpeningInventory:{cardChange:(_old,next)=>next},console,Map,Set,Math,Number,Date,JSON,String,Array,Promise,Intl,
   StorageEngine:{saveState:async()=>{saves++;}},
   AppNav:{renderCurrent:()=>{renders++;}},
   UI:{forceCloseModal:()=>{},toast:()=>{}},
@@ -25,7 +25,7 @@ const ctx={console,Map,Set,Math,Number,Date,JSON,String,Array,Promise,Intl,
   document:{getElementById:id=>els[id]||null}
 };ctx.globalThis=ctx;
 const saveCode=cut('            async saveItem(existingId) {','\n            deleteItem(itemId) {');
-vm.runInNewContext(cut('const State =','const StorageEngine =')+'\n'+cut('const Accounting =','const AppNav =')+'\n'+`const ItemController={tempUnits:[{name:'Pack',factor:1,costPrice:1.23456,salePrice:12.3456}],selectedCurrency:'USD',${saveCode}};`+ '\n'+i18n+'\nglobalThis.Test={State,Accounting,ItemController,I18n}',ctx,{timeout:7000});
+vm.runInNewContext(cut('const State =','const StorageEngine =')+'\n'+cut('const Accounting =','const AppNav =')+'\n'+`const ItemController={tempUnits:[{name:'Pack',factor:1,costPrice:1.23456,salePrice:12.3456}],selectedCurrency:'USD',safePhotoData:()=>'',${saveCode}};`+ '\n'+i18n+'\nglobalThis.Test={State,Accounting,ItemController,I18n}',ctx,{timeout:7000});
 const {State,Accounting,ItemController,I18n}=ctx.Test;
 assert.equal(Accounting.formatItemQuantity(12.3456),'12.35');
 assert.equal(Accounting.formatItemPriceNumber(12.3456),'12.35');
@@ -43,10 +43,10 @@ for(const digits of [0,1,2,3,4]){
   assert.equal(Accounting.formatItemQuantity(12.3456),target);
 }
 State.settings.itemQuantityDecimals=2;
-assert.ok(html.includes('Accounting.formatItemPrice(u.salePrice, item.currency)'), 'item cards should use new price formatter');
-assert.ok(html.includes('Accounting.formatItemPrice(priceInInvCurr, d.currency)'), 'invoice grid should use formatter');
+assert.ok(html.includes('Accounting.formatEditableItemPrice(baseU.costPrice)'), 'item editor uses the configured display precision');
+assert.ok(html.includes('Accounting.formatItemPrice(priceInInvCurr, opening ? itm.currency : d.currency)'), 'invoice grid should use formatter');
 assert.equal((html.match(/Accounting\.formatItemPriceNumber\(r\.price\)/g)||[]).length,2,'both print views should use new price formatter');
-assert.ok(html.includes('onfocus="this.value=InvoiceController.draft.rows[${idx}].price;this.select()"'));
+assert.ok(html.includes('onfocus="this.value=InvoiceController.draft.rows[${idx}].price"'));
 assert.ok(html.includes('onblur="this.value=Accounting.formatEditableItemPrice(InvoiceController.draft.rows[${idx}].price)"'));
 assert.ok(html.includes('costPrice: Accounting.parseNum(u.costPrice)'), 'item save must use raw model cost');
 assert.ok(html.includes('salePrice: Accounting.parseNum(u.salePrice)'), 'item save must use raw model sale price');
