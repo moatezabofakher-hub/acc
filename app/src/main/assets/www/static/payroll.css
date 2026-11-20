@@ -7,3 +7,9 @@
 #pay-calculation p {display:flex;justify-content:space-between;gap:.5rem;}
 
 body.ta-3d-v3524 nav.ta-bottom-nav > div.grid {grid-template-columns:repeat(6,minmax(0,1fr))!important;}
+
+body nav.ta-bottom-nav [data-nav="payroll"] > i { position:relative; isolation:isolate; }
+body nav.ta-bottom-nav [data-nav="payroll"] > i::after {
+    content:""; position:absolute; inset:0; border-radius:22%; pointer-events:none;
+    background:url('modules.webp') 50% 0 / 300% 300% no-repeat;
+}
