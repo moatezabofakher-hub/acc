@@ -3,7 +3,7 @@ name: Tiqany Acc - Solo Signed Release
 on:
   workflow_dispatch:
   push:
-    branches: ['feature/functional-icons-header', main, 'fix/scroll-behavior-144', 'feature/manager-finance-ui-from-152', 'feature/payroll-157']
+    branches: ['feature/functional-icons-header', main, 'fix/scroll-behavior-144', 'feature/manager-finance-ui-from-152', 'feature/payroll-157', 'feature/catalog-restore-164']
 
 permissions:
   contents: write
@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Check selective material and account restore
+        run: node --test tests/catalog-import.test.cjs
       - name: Check weighted costs, settlements and cash shifts
         run: node --test tests/finance-operations.test.cjs
       - name: Java 17
@@ -139,7 +141,7 @@ jobs:
           apk="app/build/outputs/apk/release/app-release.apk"
           test -s "$apk"
           package_info=$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk")
-          grep -Fq "versionCode='162' versionName='3.5.162'" <<< "$package_info"
+          grep -Fq "versionCode='164' versionName='3.5.164'" <<< "$package_info"
           grep -Fxq "application-label:'المحاسب التقني'" <<< "$package_info"
           verifier="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           "$verifier" verify --verbose --print-certs "$apk"
@@ -157,16 +159,16 @@ jobs:
             exit 1
           fi
           mkdir -p output
-          cp "$apk" "output/Tiqany-Acc-Solo-3.5.162-RELEASE.apk"
-          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.162-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.162-RELEASE.apk.sha256")
+          cp "$apk" "output/Tiqany-Acc-Solo-3.5.164-RELEASE.apk"
+          (cd output && sha256sum "Tiqany-Acc-Solo-3.5.164-RELEASE.apk" > "Tiqany-Acc-Solo-3.5.164-RELEASE.apk.sha256")
       - name: Upload signed app APK and checksum
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: Tiqany-Acc-Solo-3.5.162-RELEASE
+          name: Tiqany-Acc-Solo-3.5.164-RELEASE
           path: |
-            output/Tiqany-Acc-Solo-3.5.162-RELEASE.apk
-            output/Tiqany-Acc-Solo-3.5.162-RELEASE.apk.sha256
+            output/Tiqany-Acc-Solo-3.5.164-RELEASE.apk
+            output/Tiqany-Acc-Solo-3.5.164-RELEASE.apk.sha256
           if-no-files-found: error
           retention-days: 30
       - name: Publish isolated signed finance preview for direct download
@@ -176,27 +178,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk='output/Tiqany-Acc-Solo-3.5.162-RELEASE.apk'
+          apk='output/Tiqany-Acc-Solo-3.5.164-RELEASE.apk'
           checksum="${apk}.sha256"
           test -s "$apk" && test -s "$checksum"
           tag='tiqany-solo-finance-preview-'"${GITHUB_SHA:0:10}"
-          gh release create "$tag" "$apk" "$checksum" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'المحاسب التقني التطبيق المستقل - معاينة الإصدار 3.5.162' --notes 'تعديل نسب المساهمين مع الرصيد السالب واختيار مصدر أرباح المستثمر.' --prerelease
+          gh release create "$tag" "$apk" "$checksum" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'المحاسب التقني التطبيق المستقل - معاينة الإصدار 3.5.164' --notes 'استعادة المواد والحسابات بصورة مستقلة وترقيم بطاقات المواد.' --prerelease
           gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url --jq '.url'
       - name: Publish signed main branch artifact for two-theme update
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/catalog-restore-164'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          apk='output/Tiqany-Acc-Solo-3.5.162-RELEASE.apk'
+          apk='output/Tiqany-Acc-Solo-3.5.164-RELEASE.apk'
           checksum="${apk}.sha256"
           test -s "$apk" && test -s "$checksum"
           tag='tiqany-solo-themes-'"${GITHUB_SHA:0:10}"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" "$apk" "$checksum" --clobber --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$tag" "$apk" "$checksum" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'المحاسب التقني المستقل 3.5.162' --notes 'تعديل نسب المساهمين مع الرصيد السالب واختيار مصدر أرباح المستثمر.' --prerelease
+            gh release create "$tag" "$apk" "$checksum" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'المحاسب التقني المستقل 3.5.164' --notes 'استعادة المواد والحسابات بصورة مستقلة وترقيم بطاقات المواد.' --prerelease
           fi
           gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url --jq '.url'
 

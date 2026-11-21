@@ -5871,7 +5871,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 const mode = State.settings.btPrintMode || 'auto';
                 main.innerHTML = `
                     <div class="mb-3 flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2" data-app-build="${InstalledAppVersion.number()}">
-                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.162</span>
+                        <span class="font-black text-xs text-emerald-800"><i class="fas fa-check-circle ml-1"></i> إصدار التطبيق: 3.5.164</span>
                         <span class="text-[10px] font-bold text-emerald-700">مظهر ثلاثي الأبعاد موحّد</span>
                     </div>
                     ${TiqanySupport.launch()}
@@ -6175,6 +6175,14 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                             <label class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-upload"></i> استعادة نسخة محفوظة
                                 <input type="file" accept=".json" onchange="SettingsController.importBackup(event)" class="hidden">
+                            </label>
+                            <label class="bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-boxes" aria-hidden="true"></i> استعادة المواد
+                                <input type="file" accept=".json,application/json" aria-label="استعادة المواد" onchange="CatalogImport.open(event,'items')" class="sr-only">
+                            </label>
+                            <label class="bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-address-book" aria-hidden="true"></i> استعادة الحسابات
+                                <input type="file" accept=".json,application/json" aria-label="استعادة الحسابات" onchange="CatalogImport.open(event,'accounts')" class="sr-only">
                             </label>
                         </div>
                         <div class="border-t border-slate-100 pt-3 space-y-3">
@@ -6550,6 +6558,10 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label for="itmNumber" class="block font-bold text-slate-700 mb-1">رقم المادة</label>
+                                <input id="itmNumber" type="text" dir="ltr" maxlength="128" oninput="ItemController.markItemDirty()" value="${AppEscape.text(existing?.itemNumber || CatalogImport.suggested())}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold">
+                            </div>
                             <div>
                                 <label class="block font-bold text-slate-700 mb-1">اسم الصنف / المادة *</label>
                                 <input type="text" id="itmName" oninput="ItemController.markItemDirty()" value="${existing ? existing.name : ''}" placeholder="مثال: زيت دوار الشمس" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold">
@@ -7067,6 +7079,17 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     return false;
                 }
 
+                let itemNumber;
+                try {
+                    const oldNumber = State.items.find(item => item.id === existingId)?.itemNumber;
+                    itemNumber = CatalogImport.cardCode(document.getElementById('itmNumber')?.value ?? (oldNumber || CatalogImport.suggested()), existingId);
+                    CatalogImport.remember(oldNumber);
+                    CatalogImport.remember(itemNumber);
+                } catch (error) {
+                    UI.toast(error.message, 'error');
+                    return false;
+                }
+
                 if (category && !State.categories.includes(category)) {
                     State.categories.push(category);
                 }
@@ -7076,7 +7099,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                     if (idx > -1) {
                         State.items[idx] = OpeningInventory.cardChange(State.items[idx],{
                             ...State.items[idx],
-                            name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
+                            itemNumber, name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
                             photoData: this.safePhotoData(this.tempPhotoData),
                             units: this.tempUnits
                         });
@@ -7084,7 +7107,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 } else {
                     State.items.push(OpeningInventory.cardChange(null,{
                         id: 'itm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-                        name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
+                        itemNumber, name, category, currency, openingStockBase, minStockBase, barcode,isBundle,bundleComponents,bundlePricing,
                         photoData: this.safePhotoData(this.tempPhotoData),
                         units: this.tempUnits
                     }));
@@ -7118,6 +7141,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
                 }
 
                 UI.showDeleteConfirm('حذف بطاقة مادة', `هل أنت متأكد من حذف الصنف "${item.name}" نهائياً من المستودع؟ (لا توجد أي عمليات مرتبطة به)`, async () => {
+                    CatalogImport.remember(item.itemNumber);
                     State.items = State.items.filter(i => i.id !== itemId);
                     await StorageEngine.saveState();
                     UI.toast('تم حذف المادة بنجاح', 'success');
@@ -10565,6 +10589,7 @@ html body.ta-3d-v3524:not(.ta-dashboard-screen):not(.ta-workspace-screen):not(.t
 })();
 </script>
 <script defer src="static/ta-date-view-35107.js"></script>
+<script src="static/catalog-import.js"></script>
 <script src="static/company-lifecycle-128.js"></script>
 <script src="static/ta-settings-order-security-138.js"></script>
 <script defer src="static/ta-currency-exchange-core-142.js"></script><script defer src="static/ta-currency-exchange-ui-142.js"></script>
